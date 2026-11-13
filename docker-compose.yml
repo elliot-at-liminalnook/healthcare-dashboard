@@ -1,0 +1,52 @@
+# Starts the full stack: `docker compose up --build`
+# Every value has a working default; copy .env.example to .env to override.
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-healthcare}
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-healthcare}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTLP_ENDPOINT-http://lgtm:4318}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    environment:
+      OTLP_UPSTREAM: ${OTLP_ENDPOINT-http://lgtm:4318}
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Grafana with an OpenTelemetry collector, Loki (logs) and Tempo (traces).
+  # The app does not depend on it: if it is down, telemetry is dropped.
+  lgtm:
+    image: grafana/otel-lgtm:0.41.0
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+
+volumes:
+  db-data:

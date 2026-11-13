@@ -1,0 +1,43 @@
+# Rendered at container start: nginx's entrypoint substitutes ${OTLP_UPSTREAM}
+# from the environment and writes the result to /etc/nginx/conf.d/.
+map "${OTLP_UPSTREAM}" $telemetry_enabled {
+    ""      false;
+    default true;
+}
+
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+
+    # The browser calls /api/...; forward to the backend with the prefix removed.
+    location /api/ {
+        proxy_pass http://backend:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Runtime configuration for the app: telemetry is on when a collector is configured.
+    location = /config.js {
+        default_type application/javascript;
+        add_header Cache-Control "no-store";
+        return 200 'window.__APP_CONFIG__ = { telemetryEnabled: $telemetry_enabled }\n';
+    }
+
+    # Browser telemetry: forward /otlp/... to the OpenTelemetry collector.
+    location /otlp/ {
+        set $otlp_upstream "${OTLP_UPSTREAM}";
+        if ($otlp_upstream = "") {
+            return 404;
+        }
+        # Resolve the collector's name per request, so nginx starts without it.
+        resolver 127.0.0.11 valid=10s;
+        rewrite ^/otlp/(.*)$ /$1 break;
+        proxy_pass $otlp_upstream;
+    }
+
+    # Single-page app: unknown paths fall back to index.html for client-side routing.
+    location / {
+        try_files $uri /index.html;
+    }
+}

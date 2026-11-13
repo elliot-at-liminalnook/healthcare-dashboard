@@ -1,0 +1,41 @@
+[project]
+name = "healthcare-dashboard-backend"
+version = "0.1.0"
+description = "FastAPI backend for the healthcare dashboard"
+requires-python = ">=3.15"
+dependencies = [
+    "alembic>=1.20",
+    "asyncpg>=0.32",
+    "fastapi>=0.162",
+    "opentelemetry-exporter-otlp-proto-http",
+    "opentelemetry-instrumentation-fastapi",
+    "opentelemetry-instrumentation-logging",
+    "opentelemetry-instrumentation-asyncpg",
+    "opentelemetry-sdk",
+    "pydantic-settings>=2.16",
+    "sqlalchemy[asyncio]>=2.1",
+    "structlog",
+    "uvicorn[standard]>=0.54",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.16",
+    "pytest>=9.2",
+    "ruff>=0.17",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py315"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "ASYNC"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies as call expressions in argument defaults.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
