@@ -24,7 +24,7 @@ test('part-3-notes', async ({ page, request, director }) => {
 
   // --- The summary -----------------------------------------------------------
   const summary = page.getByRole('region', { name: 'Summary' })
-  await expect(summary).toContainText('Richard Baker is 65 years old')
+  await expect(summary).toContainText(/Richard Baker is \d+ years old/)
   await expect(summary).toContainText('Written from the profile and 4 notes')
   await director.caption('Every patient opens with a written summary')
   await director.moveTo(page.getByRole('heading', { name: 'Summary' }))

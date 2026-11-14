@@ -1,5 +1,7 @@
 # Healthcare Dashboard
 
+[![CI](https://github.com/elliot-at-liminalnook/healthcare-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/elliot-at-liminalnook/healthcare-dashboard/actions/workflows/ci.yml)
+
 A patient management dashboard for a medical practice.
 
 ## Run locally
@@ -82,7 +84,7 @@ Date rules that depend on today's date cannot be expressed in an OpenAPI schema,
 | Backend | Python 3.15, FastAPI, SQLAlchemy 2 (async, asyncpg), Alembic, uv |
 | Database | PostgreSQL 18 |
 | Logging and tracing | structlog and OpenTelemetry (backend); OpenTelemetry web SDK (frontend); Grafana for viewing |
-| Tooling | Ruff and pytest (backend); oxlint and Prettier (frontend) |
+| Tooling | Ruff and pytest (backend); oxlint and Prettier (frontend); Playwright (end to end); GitHub Actions |
 
 ## Layout
 
@@ -173,6 +175,17 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs four jobs in parallel on every push and pull request:
+
+| Job | What it proves |
+|---|---|
+| Backend | Ruff lint and formatting; migrations apply to a fresh PostgreSQL 18; the models match the migrations (`alembic check`); the test suite passes |
+| Frontend | oxlint and Prettier are clean; the app type-checks and builds |
+| Generated API client is up to date | Re-exports the OpenAPI schema and regenerates the hooks and Zod schemas; fails if the result differs from what is committed, so the frontend can never drift from the API |
+| End-to-end demos | Starts the stack with Docker Compose and runs the demo specs against it; the recorded GIFs are kept as a build artifact |
 
 ### The typed API client
 

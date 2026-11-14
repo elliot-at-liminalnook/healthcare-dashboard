@@ -35,10 +35,17 @@ test('part-2-dashboard', async ({ page, director }) => {
 
   await director.caption('Sort by any column')
   const age = page.getByRole('button', { name: 'Age' })
+  // Ages grow with the calendar, so compare the two ends rather than fixed numbers.
+  const ageInRow = async (row: number) =>
+    Number(await page.getByRole('row').nth(row).getByRole('cell').nth(1).innerText())
   await director.click(age)
-  await expect(page.getByRole('row').nth(1).getByRole('cell').nth(1)).toHaveText('0')
+  await expect(page).toHaveURL(/sort=age$/)
+  await expect.poll(() => ageInRow(1)).toBeLessThan(5)
+  const youngest = await ageInRow(1)
   await director.click(age)
-  await expect(page.getByRole('row').nth(1).getByRole('cell').nth(1)).toHaveText('97')
+  await expect(page).toHaveURL(/sort=age&order=desc/)
+  await expect.poll(() => ageInRow(1)).toBeGreaterThan(90)
+  expect(youngest).toBeLessThan(await ageInRow(1))
   await director.beat(600)
 
   await director.caption('Page, search and sort live in the URL')
