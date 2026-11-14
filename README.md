@@ -1,12 +1,12 @@
 # Healthcare Dashboard
 
+### [Open the live dashboard →](https://healthcare-dashboard-eight-delta.vercel.app)
+
+The live dashboard runs on sample data that is restored on every deploy, so feel free to add, edit and delete patients.
+
 [![CI](https://github.com/elliot-at-liminalnook/healthcare-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/elliot-at-liminalnook/healthcare-dashboard/actions/workflows/ci.yml)
 
 A patient management dashboard for a medical practice. The frontend is React and TypeScript, the backend is FastAPI, and the data is stored in PostgreSQL.
-
-**Live demo: https://healthcare-dashboard-eight-delta.vercel.app**
-
-The demo runs on sample data that is restored on every deploy, so feel free to add, edit and delete patients.
 
 ## Run locally
 
