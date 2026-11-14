@@ -1,0 +1,31 @@
+# Development overlay: the same stack, with hot reload at both ends.
+#
+#   make dev
+#   (docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build)
+#
+# Saving a file under backend/app restarts the API; saving a file under
+# frontend/src updates the page in place. URLs are the same as the default stack.
+services:
+  backend:
+    # Run the mounted source, restarting whenever it changes.
+    command: >-
+      sh -c "alembic upgrade head && python -m scripts.seed &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log --reload --reload-dir app"
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      # The Vite dev server proxies /api and /otlp, as nginx does in the default stack.
+      API_PROXY_TARGET: http://backend:8000
+      OTLP_PROXY_TARGET: ${OTLP_ENDPOINT-http://lgtm:4318}
+      VITE_TELEMETRY_ENABLED: "true"
+    ports: !override
+      - "${FRONTEND_PORT:-8080}:5173"
+    volumes:
+      - ./frontend:/app
+      # Keep the image's node_modules instead of the host's (or none at all).
+      - /app/node_modules

@@ -1,6 +1,6 @@
 // Runs inside the page before the app loads (Playwright `addInitScript`).
 // Draws what a headless browser does not: a mouse cursor, click ripples,
-// caption pills and an opening title card. Nothing here intercepts input.
+// a subtitle bar and an opening title card. Nothing here intercepts input.
 ;(() => {
   const config = window.__DEMO__ ?? {}
   const FONT = "'Inter Variable', system-ui, sans-serif"
@@ -14,11 +14,17 @@
       border: 2px solid #147d80; background: rgba(20,125,128,.25);
       animation: demo-ripple .5s ease-out forwards; }
     @keyframes demo-ripple { to { transform: scale(3.6); opacity: 0; } }
-    .demo-caption { left: 50%; bottom: 30px; transform: translate(-50%, 16px); opacity: 0;
-      background: rgba(28,38,43,.94); color: #fff; font-size: 17px; font-weight: 600;
-      letter-spacing: .1px; padding: 12px 22px; border-radius: 999px; white-space: nowrap;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25); transition: opacity .28s ease, transform .28s ease; }
-    .demo-caption.on { opacity: 1; transform: translate(-50%, 0); }
+    /* A subtitle bar along the bottom edge. The page gets matching bottom
+       padding, so content can always be scrolled clear of it. */
+    .demo-caption { left: 0; right: 0; bottom: 0; min-height: 60px; padding: 14px 40px;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      background: #1c262b; color: #fff; font-size: 18px; font-weight: 600;
+      letter-spacing: .1px; line-height: 1.4;
+      transform: translateY(100%); transition: transform .3s ease; }
+    .demo-caption.on { transform: translateY(0); }
+    .demo-caption span { transition: opacity .18s ease; }
+    .demo-caption.swap span { opacity: 0; }
+    .mantine-AppShell-main { padding-bottom: 120px !important; }
     .demo-title { inset: 0; display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 14px; color: #fff; text-align: center;
       background: #0f7578; /* flat: gradients band badly in a GIF's limited palette */
@@ -90,10 +96,21 @@
     true,
   )
 
+  const captionText = document.createElement('span')
+  caption.append(captionText)
+
   window.__demoCaption = (text) => {
     if (!text) return caption.classList.remove('on')
-    caption.textContent = text
-    caption.classList.add('on')
+    if (!caption.classList.contains('on')) {
+      captionText.textContent = text
+      return caption.classList.add('on')
+    }
+    // The bar stays in place; only the words cross-fade.
+    caption.classList.add('swap')
+    setTimeout(() => {
+      captionText.textContent = text
+      caption.classList.remove('swap')
+    }, 190)
   }
 
   if (document.body) mount()

@@ -1,7 +1,10 @@
-.PHONY: up down test lint client lock demos
+.PHONY: up dev down test lint client lock demos
 
 up: ## Build and start the full stack
 	docker compose up --build
+
+dev: ## Start the stack with hot reload for the backend and the frontend
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build --renew-anon-volumes
 
 down: ## Stop the stack
 	docker compose down

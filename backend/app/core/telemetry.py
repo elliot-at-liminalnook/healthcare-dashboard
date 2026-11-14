@@ -43,7 +43,12 @@ def setup_telemetry(app: FastAPI, settings: Settings) -> Callable[[], None]:
         logger_provider.add_log_record_processor(
             BatchLogRecordProcessor(OTLPLogExporter(endpoint=f"{endpoint}/v1/logs"))
         )
-        logging.getLogger().addHandler(LoggingHandler(logger_provider=logger_provider))
+        handler = LoggingHandler(logger_provider=logger_provider)
+        # Do not export OpenTelemetry's own log messages through OpenTelemetry.
+        handler.addFilter(lambda record: not record.name.startswith("opentelemetry"))
+        logging.getLogger().addHandler(handler)
+        # Detach the handler first, so nothing is logged into a provider that has shut down.
+        shutdown_hooks.append(lambda: logging.getLogger().removeHandler(handler))
         shutdown_hooks.append(logger_provider.shutdown)
 
     FastAPIInstrumentor.instrument_app(

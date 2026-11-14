@@ -19,56 +19,54 @@ test('part-3-notes', async ({ page, request, director }) => {
   await director.open(`/patients/${patient.id}`, {
     kicker: 'Healthcare Dashboard · Part 3',
     title: 'Patient notes',
-    subtitle: 'Clinical notes, and a summary written from them',
+    subtitle: 'Clinical notes, and a summary generated from them',
   })
 
   // --- The summary -----------------------------------------------------------
   const summary = page.getByRole('region', { name: 'Summary' })
   await expect(summary).toContainText(/Richard Baker is \d+ years old/)
   await expect(summary).toContainText('Written from the profile and 4 notes')
-  await director.caption('Every patient opens with a written summary')
-  await director.moveTo(page.getByRole('heading', { name: 'Summary' }))
-  await director.beat(1200)
-  await director.caption('Who they are, what matters clinically, and the story so far', 2200)
+  await director.caption(
+    'Each patient page opens with a summary generated from their profile and notes.',
+  )
+  await director.moveTo(summary.getByText(/There are 4 clinical notes/))
 
   // --- Adding a note ---------------------------------------------------------
   const notes = page.getByRole('region', { name: 'Clinical notes' })
   const addNote = page.getByRole('button', { name: 'Add note' })
-  await director.scrollTo(addNote)
-  await director.caption('The notes behind it, newest first', 1500)
+  await director.caption('Notes are listed from newest to oldest.')
+  await director.scrollTo(addNote, 900)
 
-  await director.caption('An empty note never leaves the browser')
+  await director.caption('An empty note is rejected before it is sent to the server.')
   await director.click(addNote)
   await expect(page.getByText('Write the note before adding it')).toBeVisible()
-  await director.beat(900)
 
-  await director.caption('So write a real one')
+  await director.caption('A new note is saved and appears at the top of the list.')
   await director.type(page.getByRole('textbox', { name: 'New note' }), NOTE, 600)
   await director.click(addNote)
   await expect(page.getByText('Note added')).toBeVisible()
   await expect(notes.getByText(NOTE)).toBeVisible()
-  await director.caption('Saved, and at the top of the timeline', 1600)
+  await director.beat(1200)
 
   // --- The summary follows ---------------------------------------------------
+  await director.caption('The summary is regenerated whenever a note is added or deleted.')
   await director.scrollTo(page.getByRole('heading', { name: 'Summary' }))
   await expect(summary).toContainText('Written from the profile and 5 notes')
-  await expect(summary).toContainText(`Most recently, on`)
+  await expect(summary).toContainText('Most recently, on')
   await expect(summary).toContainText(NOTE)
-  await director.caption('And the summary has already been rewritten')
   await director.moveTo(summary.getByText(/There are 5 clinical notes/))
-  await director.beat(2400)
+  await director.beat(1500)
 
   // --- Deleting --------------------------------------------------------------
   const newest = notes.getByRole('button', { name: /^Delete note from/ }).first()
+  await director.caption('Deleting a note requires confirmation.')
   await director.scrollTo(newest)
-  await director.caption('Deleting asks first')
   await director.click(newest)
   await expect(page.getByRole('dialog')).toContainText('Delete this note?')
-  await director.beat(700)
+  await director.beat(900)
   await director.click(page.getByRole('button', { name: 'Delete note', exact: true }))
   await expect(page.getByText('Note deleted')).toBeVisible()
   await expect(notes.getByText(NOTE)).toHaveCount(0)
-  await director.beat(1500)
 
   await removeDemoNotes(request, patient.id)
 })

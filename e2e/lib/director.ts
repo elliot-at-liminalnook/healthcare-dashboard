@@ -13,6 +13,9 @@ import { test as base, type CDPSession, type Locator, type Page } from '@playwri
 const FRAMES_ROOT = process.env.FRAMES_DIR ?? path.resolve('frames')
 const OVERLAY = readFileSync(path.join(import.meta.dirname, 'overlay.js'), 'utf8')
 
+/** Space kept clear at the bottom of the screen for the subtitle bar. */
+const CAPTION_BAR_HEIGHT = 80
+
 interface TitleCard {
   kicker: string
   title: string
@@ -24,6 +27,8 @@ export class Director {
   private frames: { file: string; at: number }[] = []
   private pending: Promise<void>[] = []
   private pointer = { x: 600, y: 420 }
+  /** When the caption on screen has been up long enough to read. */
+  private captionVisibleUntil = 0
   private readonly dir: string
 
   constructor(
@@ -86,16 +91,35 @@ export class Director {
     await this.page.waitForTimeout(ms)
   }
 
-  /** Show a caption pill; an empty string hides it. */
-  async caption(text: string, holdMs = 900): Promise<void> {
+  /**
+   * Describe the scene that is about to play. The caption stays up until the
+   * next one, and is never replaced before there has been time to read it.
+   * The action waits a moment, so the viewer reads first and then watches.
+   * An empty string hides the caption.
+   */
+  async caption(text: string): Promise<void> {
+    const stillReading = this.captionVisibleUntil - performance.now()
+    if (stillReading > 0) await this.beat(stillReading)
+
     await this.page.evaluate((value) => (window as any).__demoCaption(value), text)
-    if (text) await this.beat(holdMs)
+    await this.beat(350)
+    if (!text) return
+
+    const words = text.split(/\s+/).length
+    this.captionVisibleUntil = performance.now() + Math.max(3400, 1400 + words * 340)
+    await this.beat(Math.min(900 + words * 90, 2200))
   }
 
   /** Glide the cursor to the middle of an element, easing in and out. */
   async moveTo(target: Locator): Promise<void> {
     await target.scrollIntoViewIfNeeded()
-    const box = await target.boundingBox()
+    let box = await target.boundingBox()
+    // Anything in the bottom strip would sit under the subtitle bar; bring it up.
+    const viewport = this.page.viewportSize()
+    if (box && viewport && box.y + box.height > viewport.height - CAPTION_BAR_HEIGHT) {
+      await this.scrollTo(target, 0)
+      box = await target.boundingBox()
+    }
     if (!box) throw new Error('Cannot move to an element that is not visible')
     const end = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
     const start = this.pointer
