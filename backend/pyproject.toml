@@ -6,6 +6,7 @@ requires-python = ">=3.15"
 dependencies = [
     "alembic>=1.20",
     "asyncpg>=0.32",
+    "email-validator",
     "fastapi>=0.162",
     "opentelemetry-exporter-otlp-proto-http",
     "opentelemetry-instrumentation-fastapi",

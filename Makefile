@@ -6,8 +6,8 @@ up: ## Build and start the full stack
 down: ## Stop the stack
 	docker compose down
 
-test: ## Run backend tests
-	docker compose run --rm --no-deps backend uv run pytest
+test: ## Run backend tests (starts the database; uses a separate test database)
+	docker compose run --rm backend uv run pytest
 
 lint: ## Lint backend and frontend
 	docker compose run --rm --no-deps backend sh -c "uv run ruff check . && uv run ruff format --check ."

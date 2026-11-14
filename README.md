@@ -39,6 +39,8 @@ backend/
     api/routes/   route handlers, one module per resource
     core/         settings, database session, logging, telemetry
     models/       SQLAlchemy models
+    schemas/      request and response shapes, with validation rules
+    services/     queries and writes; no HTTP knowledge
     main.py       application factory
   fixtures/       patients.json: 200 synthetic patients with clinical notes
   migrations/     Alembic migrations
@@ -47,11 +49,26 @@ backend/
 frontend/
   src/
     api/          http.ts (fetch wrapper) and generated/ (typed client, do not edit)
-    app/          router, layout, query client, error pages
+    app/          router, layout, theme, query client, error pages
     features/     one folder per feature (dashboard, patients)
     telemetry/    logger and OpenTelemetry setup
 docker-compose.yml
 ```
+
+## API
+
+| Method and path | Purpose |
+|---|---|
+| `GET /health` | Liveness check, returns `{"status": "ok"}` |
+| `GET /patients` | One page of patients. Query: `page`, `page_size` (max 100), `search` (words matched against first and last name), `status`, `sort_by` (`name`, `age`, `last_visit`, `status`), `sort_order` |
+| `GET /patients/{id}` | One patient's full record |
+| `POST /patients` | Create a patient (201) |
+| `PUT /patients/{id}` | Replace a patient |
+| `DELETE /patients/{id}` | Delete a patient and their notes (204) |
+
+- The list returns `{items, total, page, page_size}`, and each item carries only what the list shows (name, age, status, last visit), not contact or medical details.
+- Unknown ids return 404. Invalid input returns 422 with one entry per problem, each naming its field, a stable `type` code and a plain-language message, for example `{"loc": ["body", "date_of_birth"], "type": "date_in_future", "msg": "Cannot be in the future"}`.
+- Validation rules live in one place, `backend/app/schemas/patient.py`, as reusable types. They flow into the OpenAPI schema and from there into the generated frontend types.
 
 ## Data model
 
@@ -82,7 +99,7 @@ Health checks are neither logged nor traced. Do not put patient data in log fiel
 ## Development
 
 ```bash
-make test     # backend tests
+make test     # backend tests, against a separate test database
 make lint     # ruff, oxlint, prettier
 make client   # regenerate the typed API client after changing the API
 make lock     # update backend/uv.lock after changing dependencies

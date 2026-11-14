@@ -1,6 +1,33 @@
 {
   "components": {
     "schemas": {
+      "BloodType": {
+        "enum": [
+          "A+",
+          "A-",
+          "B+",
+          "B-",
+          "AB+",
+          "AB-",
+          "O+",
+          "O-"
+        ],
+        "title": "BloodType",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "HealthStatus": {
         "properties": {
           "status": {
@@ -11,6 +38,500 @@
           }
         },
         "title": "HealthStatus",
+        "type": "object"
+      },
+      "Page_PatientListItem_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PatientListItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "Page[PatientListItem]",
+        "type": "object"
+      },
+      "PatientListItem": {
+        "description": "The fields the patient list shows. Contact and medical details are left out.",
+        "properties": {
+          "age": {
+            "readOnly": true,
+            "title": "Age",
+            "type": "integer"
+          },
+          "date_of_birth": {
+            "format": "date",
+            "title": "Date Of Birth",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "last_visit": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PatientStatus"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "date_of_birth",
+          "status",
+          "last_visit",
+          "age"
+        ],
+        "title": "PatientListItem",
+        "type": "object"
+      },
+      "PatientRead": {
+        "description": "A full patient record.",
+        "properties": {
+          "address_line1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Line1"
+          },
+          "address_line2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Line2"
+          },
+          "age": {
+            "readOnly": true,
+            "title": "Age",
+            "type": "integer"
+          },
+          "allergies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Allergies",
+            "type": "array"
+          },
+          "blood_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BloodType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "conditions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Conditions",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "date_of_birth": {
+            "format": "date",
+            "title": "Date Of Birth",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "last_visit": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PatientStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "date_of_birth",
+          "status",
+          "last_visit",
+          "email",
+          "phone",
+          "address_line1",
+          "address_line2",
+          "city",
+          "state",
+          "postal_code",
+          "blood_type",
+          "allergies",
+          "conditions",
+          "created_at",
+          "updated_at",
+          "age"
+        ],
+        "title": "PatientRead",
+        "type": "object"
+      },
+      "PatientSort": {
+        "enum": [
+          "name",
+          "age",
+          "last_visit",
+          "status"
+        ],
+        "title": "PatientSort",
+        "type": "string"
+      },
+      "PatientStatus": {
+        "enum": [
+          "active",
+          "inactive",
+          "critical"
+        ],
+        "title": "PatientStatus",
+        "type": "string"
+      },
+      "PatientWrite": {
+        "description": "Body for creating a patient, or replacing one (PUT).",
+        "properties": {
+          "address_line1": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Line1"
+          },
+          "address_line2": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Line2"
+          },
+          "allergies": {
+            "default": [],
+            "items": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Allergies",
+            "type": "array"
+          },
+          "blood_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BloodType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "conditions": {
+            "default": [],
+            "items": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Conditions",
+            "type": "array"
+          },
+          "date_of_birth": {
+            "format": "date",
+            "title": "Date Of Birth",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "first_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Last Name",
+            "type": "string"
+          },
+          "last_visit": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "postal_code": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postal Code"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PatientStatus",
+            "default": "active"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "date_of_birth"
+        ],
+        "title": "PatientWrite",
+        "type": "object"
+      },
+      "SortOrder": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortOrder",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
         "type": "object"
       }
     }
@@ -39,6 +560,291 @@
         "summary": "Get Health",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/patients": {
+      "get": {
+        "operationId": "list_patients",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Words to find in the patient's name",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Words to find in the patient's name",
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PatientStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_by",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PatientSort",
+              "default": "name"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_order",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder",
+              "default": "asc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_PatientListItem_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Patients",
+        "tags": [
+          "patients"
+        ]
+      },
+      "post": {
+        "operationId": "create_patient",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Patient",
+        "tags": [
+          "patients"
+        ]
+      }
+    },
+    "/patients/{patient_id}": {
+      "delete": {
+        "operationId": "delete_patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Patient not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Patient",
+        "tags": [
+          "patients"
+        ]
+      },
+      "get": {
+        "operationId": "get_patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Patient not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Patient",
+        "tags": [
+          "patients"
+        ]
+      },
+      "put": {
+        "operationId": "replace_patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Patient not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace Patient",
+        "tags": [
+          "patients"
         ]
       }
     }

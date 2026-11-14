@@ -1,0 +1,36 @@
+.table {
+  font-variant-numeric: tabular-nums;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: inherit;
+
+  &:hover {
+    color: var(--mantine-primary-color-filled);
+  }
+}
+
+.row {
+  cursor: pointer;
+}
+
+.name {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--mantine-primary-color-filled);
+    text-decoration: underline;
+  }
+}
+
+/* While the next page loads, the previous one stays visible but dimmed. */
+.stale {
+  opacity: 0.55;
+  transition: opacity 150ms ease;
+}

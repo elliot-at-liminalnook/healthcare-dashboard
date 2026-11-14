@@ -1,7 +1,8 @@
-import { AppShell, Burger, Group, NavLink, Title } from '@mantine/core'
+import { AppShell, Burger, Group, NavLink, ThemeIcon, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconLayoutDashboard, IconUsers } from '@tabler/icons-react'
+import { IconHeartbeat, IconLayoutDashboard, IconUsers } from '@tabler/icons-react'
 import { Link, Outlet, useLocation } from 'react-router'
+import classes from './AppLayout.module.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: IconLayoutDashboard },
@@ -21,16 +22,16 @@ export function AppLayout() {
 
   return (
     <AppShell
-      padding="md"
-      header={{ height: 56 }}
+      padding={{ base: 'md', sm: 'xl' }}
+      header={{ height: 60 }}
       navbar={{
-        width: 220,
+        width: 232,
         breakpoint: 'sm',
         collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
+        <Group h="100%" px="md" gap="sm">
           <Burger
             opened={mobileOpened}
             onClick={mobile.toggle}
@@ -45,27 +46,32 @@ export function AppLayout() {
             size="sm"
             aria-label="Toggle navigation"
           />
-          <Title order={1} size="h4">
-            Healthcare Dashboard
-          </Title>
+          <Link to="/" className={classes.brand}>
+            <ThemeIcon size={32} radius="md" aria-hidden>
+              <IconHeartbeat size={20} stroke={2} />
+            </ThemeIcon>
+            <Title order={1} size="h4">
+              Healthcare Dashboard
+            </Title>
+          </Link>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="xs">
+      <AppShell.Navbar p="sm">
         {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             component={Link}
             to={to}
             label={label}
-            leftSection={<Icon size={18} stroke={1.5} />}
+            leftSection={<Icon size={18} stroke={1.75} />}
             active={isActive(to, pathname)}
             onClick={mobile.close}
           />
         ))}
       </AppShell.Navbar>
 
-      <AppShell.Main>
+      <AppShell.Main className={classes.main}>
         <Outlet />
       </AppShell.Main>
     </AppShell>

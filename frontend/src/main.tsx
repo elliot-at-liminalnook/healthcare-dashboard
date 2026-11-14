@@ -1,3 +1,4 @@
+import '@fontsource-variable/inter'
 import { MantineProvider } from '@mantine/core'
 import '@mantine/core/styles.css'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -6,6 +7,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
 import { queryClient } from './app/queryClient.ts'
 import { router } from './app/router.tsx'
+import { theme } from './app/theme.ts'
 import { initTelemetry } from './telemetry/index.ts'
 import { errorAttributes, logger } from './telemetry/logger.ts'
 
@@ -23,7 +25,7 @@ function render(): void {
   }).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <MantineProvider>
+        <MantineProvider theme={theme}>
           <RouterProvider router={router} />
         </MantineProvider>
       </QueryClientProvider>

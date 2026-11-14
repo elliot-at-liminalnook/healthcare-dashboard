@@ -5,4 +5,16 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './bloodType'
 export * from './healthStatus'
+export * from './hTTPValidationError'
+export * from './listPatientsParams'
+export * from './pagePatientListItem'
+export * from './patientListItem'
+export * from './patientRead'
+export * from './patientSort'
+export * from './patientStatus'
+export * from './patientWrite'
+export * from './sortOrder'
+export * from './validationError'
+export * from './validationErrorCtx'

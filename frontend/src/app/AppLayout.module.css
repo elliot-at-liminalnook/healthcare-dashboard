@@ -1,0 +1,12 @@
+/* A faintly tinted canvas, so white cards and tables read as surfaces. */
+.main {
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  color: inherit;
+  text-decoration: none;
+}
