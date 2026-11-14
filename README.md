@@ -20,6 +20,25 @@ Every setting has a working default. To change ports or database credentials, co
 
 On startup the backend applies database migrations, loads 200 sample patients into an empty database, then serves the API. The frontend is served by nginx, which forwards `/api/*` to the backend.
 
+## Feature tour
+
+Each clip below is recorded from a Playwright spec in [`e2e/specs`](e2e/specs) that drives the real app and asserts on what it sees, so the demos are also end-to-end tests and cannot drift from the product.
+
+### Part 2 · The core dashboard
+
+![Dashboard counts, the patient list with search, sorting and paging, a patient page and the 404 page](docs/demos/part-2-dashboard.gif)
+
+The dashboard's counts link into a list of 200 patients that is paged, searched and sorted by the server. Every patient has a page, the sidebar collapses, and unknown URLs get a proper 404.
+
+| Capability | Made possible by | Why it is built this way |
+|---|---|---|
+| Header, sidebar, content area, 404 | Mantine `AppShell`; React Router nested routes | The layout is one route element and pages render into its `<Outlet>`. The sidebar's phone and desktop behaviour is configuration, not code. |
+| 100+ patients stay fast | FastAPI and SQLAlchemy: `LIMIT`/`OFFSET` plus a count | The browser only ever holds one page. List items carry four fields; contact and medical details stay on the patient's own endpoint. |
+| Search that never blocks | TanStack Query `keepPreviousData`; Mantine `useDebouncedCallback` | The current rows stay on screen, dimmed, until the next result arrives, and typing sends one request per pause rather than one per key. |
+| Page, search, filter and sort in the URL | React Router `useSearchParams`, wrapped in [`usePatientListState`](frontend/src/features/patients/usePatientListState.ts) | The URL is the only copy of the view state, so views are shareable, Back works, and no client-side store is needed. |
+| Typed API calls | Orval, generating TanStack Query hooks from the OpenAPI schema | `useListPatients({ search, sort_by })` is checked against the backend's own types at build time. |
+| Right status codes, useful errors | FastAPI and Pydantic | 404 for unknown ids; 422 with one message per invalid field. |
+
 ## Stack
 
 | Layer | Choice |
@@ -46,6 +65,8 @@ backend/
   migrations/     Alembic migrations
   scripts/        seed.py, generate_fixture.py, export_openapi.py
   tests/
+e2e/              Playwright specs that double as recorded demos
+docs/demos/       the recorded GIFs
 frontend/
   src/
     api/          http.ts (fetch wrapper) and generated/ (typed client, do not edit)
@@ -103,6 +124,7 @@ make test     # backend tests, against a separate test database
 make lint     # ruff, oxlint, prettier
 make client   # regenerate the typed API client after changing the API
 make lock     # update backend/uv.lock after changing dependencies
+make demos    # re-record the feature-tour GIFs (needs the stack running)
 ```
 
 To work on the frontend with hot reload, start the stack, then run the Vite dev server (Node 22+), which proxies `/api` to the backend on port 8000. Set `VITE_TELEMETRY_ENABLED=true` to export telemetry from the dev server to a collector on port 4318.

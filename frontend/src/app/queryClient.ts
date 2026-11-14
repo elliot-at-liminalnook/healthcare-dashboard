@@ -9,8 +9,19 @@ function apiErrorAttributes(error: unknown) {
   }
 }
 
-/** One place where every failed API read or write is logged. */
+/** The request itself was wrong (4xx), so sending it again cannot succeed. */
+function isClientError(error: unknown): boolean {
+  return error instanceof ApiError && error.status >= 400 && error.status < 500
+}
+
 export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Retry network and server failures twice; never retry "not found" or "invalid".
+      retry: (failureCount, error) => !isClientError(error) && failureCount < 2,
+    },
+  },
+  // One place where every failed API read or write is logged.
   queryCache: new QueryCache({
     onError: (error, query) => {
       logger.error('API query failed', {

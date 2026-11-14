@@ -26,3 +26,9 @@ playwright-report/
 .idea/
 .vscode/
 .DS_Store
+
+# End-to-end demo recordings
+e2e/node_modules/
+e2e/frames/
+e2e/gifs/
+docs/demos/.frames/
