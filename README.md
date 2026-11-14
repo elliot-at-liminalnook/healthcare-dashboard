@@ -24,6 +24,37 @@ No configuration is needed. To change ports or database credentials, copy `.env.
 
 When the backend starts, it applies the database migrations and, if the database is empty, loads 200 sample patients and their notes from [`backend/fixtures/patients.json`](backend/fixtures/patients.json). All of that data is invented. To go back to it after making changes, run `docker compose down -v` and start the stack again.
 
+## Design
+
+Two decisions shape the rest of the project.
+
+**The API's types and rules are written once.** The backend's Pydantic models say what a patient is and what makes one valid. FastAPI turns those models into an OpenAPI schema, and Orval turns that schema into the TypeScript types, the data-fetching hooks and the form's validation. Nothing on the frontend declares an API type by hand. CI regenerates the client on every push and fails if it differs from what is committed.
+
+**The interface is assembled from a component library.** Mantine supplies the page layout, the form inputs, the date picker and the notifications.
+
+| Choice | Why it is here |
+|---|---|
+| FastAPI and Pydantic, on Python 3.14 | The request and response models are ordinary Python classes. The validation, the error responses and the API documentation all come from them. |
+| PostgreSQL 18, with SQLAlchemy 2 (async, with asyncpg) and Alembic | SQLAlchemy supports the PostgreSQL features the data model uses, such as array columns and check constraints, and its queries are type-checked. Alembic writes each migration by comparing the models with the database. |
+| Orval and Zod | Orval generates both the data-fetching hooks and the Zod schemas from one OpenAPI file, so a new endpoint can be called from the frontend as soon as `make client` has run. |
+| TanStack Query | It holds everything that comes from the server, including caching, loading and error states, and refetching after a change. This is why the app has no global store. |
+| React Router | The patient list keeps its search, filter, sort and page in the URL, so a reload, a shared link and the Back button all return to the same view. |
+| Mantine 9, on React 19 | One library covers layout, inputs, dates, form state and notifications, and the whole theme is set in one file. |
+| structlog and OpenTelemetry, viewed in Grafana | Both are vendor-neutral, so the logs and traces can go to any collector that accepts OTLP by changing one setting. |
+| pytest and Playwright | pytest runs the API tests against a separate test database. The Playwright scripts test the app and record the GIFs below, so re-recording them after a change is one command. |
+| TypeScript 7, Vite 8, uv, Ruff, oxlint, Prettier | The language and build tools. uv locks the Python dependencies, and Ruff, oxlint and Prettier do the linting and formatting. |
+
+### Adding to it
+
+Most changes are short because of this. To add a field to a patient, for example:
+
+1. Add the column to the model and let Alembic write the migration.
+2. Add the field and its rule to the Pydantic models.
+3. Run `make client`. The TypeScript types and the form's validation schema now include the field.
+4. Add the field to the form, and show it on the patient page.
+
+The form checks the new field against its rule without any validation code being written for it, and the TypeScript build checks every place the frontend reads it. A new endpoint works the same way: write the route, run `make client`, and call the generated hook.
+
 ## Feature tour
 
 Each recording below is produced by a Playwright test in [`e2e/specs`](e2e/specs) that uses the running app and checks what it sees, so the recordings are also the end-to-end tests.
@@ -63,18 +94,6 @@ One form handles both adding and editing a patient. It catches missing fields an
 The browser and the backend both write structured logs. Every API call carries a trace ID from the browser to the API, and both sides write that ID into their logs. In the recording, a patient's phone number is changed and saved. Searching Grafana for that request's trace ID finds two log lines, one from the browser and one from the API, and the trace follows the request down to the SQL `UPDATE` that changed the row.
 
 To look at this locally, open Grafana at http://localhost:3000, go to Explore, and choose Loki for logs (the query is `{service_name=~"healthcare-.+"}`) or Tempo for traces. To turn it off, set `OTLP_ENDPOINT=` (empty) in `.env`. The app works without Grafana. Health checks are not logged or traced, and patient data should not be written to logs or trace attributes.
-
-## Stack
-
-| Area | Choice |
-|---|---|
-| Frontend | React 19, TypeScript 7, Vite 8, Mantine 9, TanStack Query, React Router |
-| State management | Data from the server is held by TanStack Query. The patient list's view state is held in the URL. Form state is held by `@mantine/form`. The app does not use a global store. |
-| API client | TanStack Query hooks and Zod schemas, generated from the backend's OpenAPI schema by Orval |
-| Backend | Python 3.14, FastAPI, SQLAlchemy 2 (async, with asyncpg), Alembic, uv |
-| Database | PostgreSQL 18 |
-| Logging and tracing | structlog and OpenTelemetry in the backend, the OpenTelemetry web SDK in the browser, and Grafana to view them |
-| Testing and tooling | pytest, Ruff, oxlint, Prettier, Playwright, GitHub Actions |
 
 ## Project layout
 
