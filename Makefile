@@ -20,7 +20,7 @@ client: ## Regenerate the typed frontend API client from the backend's OpenAPI s
 	docker compose run --rm --no-deps -T backend python -m scripts.export_openapi > frontend/openapi.json
 	cd frontend && npm run generate:client
 
-demos: ## Run the end-to-end demo specs and re-record the GIFs in docs/demos (stack must be up). SPEC=part-2 records one.
+demos: ## Run the end-to-end demo specs and re-record the GIFs in docs/demos (stack must be up). SPEC=notes records one.
 	docker build -q -t healthcare-e2e e2e
 	docker run --rm --network host --ipc host -u "$$(id -u):$$(id -g)" -e HOME=/tmp \
 		-e GIF_DIR=/out -e RESULTS_DIR=/tmp/results -v "$(CURDIR)/docs/demos:/out" healthcare-e2e $(SPEC)

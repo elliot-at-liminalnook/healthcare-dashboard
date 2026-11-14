@@ -11,13 +11,13 @@ async function removeDemoNotes(request: APIRequestContext, patientId: string) {
   }
 }
 
-test('part-3-notes', async ({ page, request, director }) => {
+test('notes', async ({ page, request, director }) => {
   const found = await (await request.get('/api/patients?search=Richard Baker')).json()
   const patient = found.items[0]
   await removeDemoNotes(request, patient.id)
 
   await director.open(`/patients/${patient.id}`, {
-    kicker: 'Healthcare Dashboard · Part 3',
+    kicker: 'Healthcare Dashboard',
     title: 'Patient notes',
     subtitle: 'Clinical notes, and a summary generated from them',
   })

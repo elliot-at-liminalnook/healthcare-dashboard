@@ -12,16 +12,16 @@ async function removeDemoPatient(request: APIRequestContext) {
   }
 }
 
-test('part-4-forms', async ({ page, request, director }) => {
+test('forms', async ({ page, request, director }) => {
   await removeDemoPatient(request)
   // Required fields are labelled with a trailing asterisk.
   const field = (name: string) =>
     page.locator('input').and(page.getByLabel(new RegExp(`^${name}( \\*)?$`)))
 
   await director.open('/patients', {
-    kicker: 'Healthcare Dashboard · Part 4',
-    title: 'Forms and validation',
-    subtitle: 'Adding and editing patients, with validation and error handling',
+    kicker: 'Healthcare Dashboard',
+    title: 'Adding and editing patients',
+    subtitle: 'One form for both, with validation and error handling',
   })
 
   // --- Client-side validation ---------------------------------------------------

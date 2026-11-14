@@ -1,9 +1,9 @@
 import { expect, test } from '../lib/director.ts'
 
-test('part-2-dashboard', async ({ page, director }) => {
+test('dashboard', async ({ page, director }) => {
   await director.open('/', {
-    kicker: 'Healthcare Dashboard · Part 2',
-    title: 'The core dashboard',
+    kicker: 'Healthcare Dashboard',
+    title: 'Dashboard and patient list',
     subtitle: 'Navigation, the patient list, and a page for each patient',
   })
 
