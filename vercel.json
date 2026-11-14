@@ -8,17 +8,39 @@
       "routes": [
         {
           "src": "/api/(.*)",
-          "transforms": [{ "type": "request.path", "op": "set", "args": "/$1" }]
+          "transforms": [
+            {
+              "type": "request.path",
+              "op": "set",
+              "args": "/$1"
+            }
+          ]
         }
       ]
     },
     "frontend": {
       "root": "frontend/",
-      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+      "framework": "vite",
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "backend" } },
-    { "source": "/(.*)", "destination": { "service": "frontend" } }
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "frontend"
+      }
+    }
   ]
 }

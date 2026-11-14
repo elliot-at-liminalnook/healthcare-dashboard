@@ -31,6 +31,11 @@ def migrate() -> None:
 
 
 if __name__ == "__main__":
+    if not (os.environ.get("DATABASE_URL_UNPOOLED") or os.environ.get("DATABASE_URL")):
+        raise SystemExit(
+            "No database is connected: set DATABASE_URL (or DATABASE_URL_UNPOOLED) "
+            "for this environment before deploying."
+        )
     migrate()
     # Alembic reconfigures logging while it runs, so set ours up afterwards.
     configure_logging(get_settings().log_level)
