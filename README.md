@@ -30,50 +30,29 @@ The three recordings below correspond to Parts 2, 3 and 4 of the brief. Each one
 
 ![The dashboard, the patient list with search, sorting and paging, a patient page, and the 404 page](docs/demos/part-2-dashboard.gif)
 
-What the recording shows:
+Start on the dashboard and click one of the counts, and you land on the patient list already filtered to that status. From there you can search by name, sort by any column, page through all 200 patients, and open any patient's page.
 
-- The dashboard shows how many patients are in each status. Each count links to the patient list, filtered by that status.
-- The patient list holds 200 patients. It can be searched by name, filtered by status, sorted by any column and paged.
-- Each patient has a page with their personal and medical information.
-- The sidebar can be collapsed. An unknown URL shows a "Page not found" page.
-
-Worth noting:
-
-- The server does the paging, searching and sorting, so the browser holds one page of patients at a time.
-- While a search is loading, the current rows stay on screen until the new results arrive.
-- The page, search and sort order are stored in the URL, so a view can be shared and the Back button returns to it.
+- The server does the searching, sorting and paging, so the browser only ever holds one page of patients.
+- Searching doesn't blank the list. The current rows stay where they are until the new ones arrive.
+- The search, sort and page are all in the URL. You can share a link to exactly what you're looking at, and the Back button takes you back to it.
 
 ### Part 3: Patient notes
 
 ![A patient's summary, adding a clinical note, the summary being regenerated, and deleting the note](docs/demos/part-3-notes.gif)
 
-What the recording shows:
+Every patient page opens with a short written summary, built from their profile and their notes. When you add a note, it appears at the top of the list and the summary is rewritten to include it. Delete the note and the summary changes back.
 
-- Each patient page opens with a summary generated from the patient's profile and notes.
-- Notes are listed from newest to oldest. A note can be added or deleted, and deleting requires confirmation.
-- The summary is regenerated whenever a note is added or deleted.
-
-Worth noting:
-
-- The summary is written by a `Summarizer` that the route receives as a dependency. The default, [`TemplateSummarizer`](backend/app/services/summary.py), builds it from a template, so it needs no API key and sends no patient data to another service. A language model could replace it without changing the route.
-- A note is always looked up through its patient, so it cannot be read or deleted through another patient's URL.
+- The summary is built from a template, not a language model, so it needs no API key and no patient data leaves the app. The code that writes it ([`summary.py`](backend/app/services/summary.py)) sits behind a small interface, so a language model could replace it later without changing the endpoint.
+- A note can only be reached through its own patient. One patient's URL can't be used to read or delete another patient's notes.
 
 ### Part 4: Forms and validation
 
 ![Adding a patient with validation errors from the browser and the server, a failed connection, then saving, editing and deleting](docs/demos/part-4-forms.gif)
 
-What the recording shows:
+One form handles both adding and editing a patient. It catches missing fields and badly formatted ones as you fill it in. When the server rejects something the browser had no way to check, the message appears under the field it's about. If the connection drops while saving, the form says so and keeps everything you typed.
 
-- A patient is added and edited with the same form.
-- Required fields and formats are checked in the browser. Each field is checked again when it loses focus.
-- The server checks rules the browser cannot, such as a last visit that is before the date of birth. Its errors are shown under the field they apply to.
-- If the connection fails, an error is shown above the form and the form keeps what was entered.
-- Deleting a patient requires confirmation.
-
-Worth noting:
-
-- The validation rules are written once, in the backend's Pydantic models in [`backend/app/schemas`](backend/app/schemas). Orval generates Zod schemas from the API's OpenAPI schema, and the form validates with those, so changing a rule in the backend changes the form.
-- Rules that depend on today's date cannot be described in an OpenAPI schema, so the server enforces them and the form shows its answer under the right field.
+- The validation rules are written once, in the backend ([`backend/app/schemas`](backend/app/schemas)). The form's checks are generated from the API's schema, so the two always agree.
+- A few rules depend on today's date, which that schema can't express. The server checks those, and the form shows its answer.
 
 ## Stack
 
@@ -174,16 +153,10 @@ The backend and the browser both produce structured logs, and a single trace fol
 
 ![A phone number is changed in the app, then the matching log lines and the trace are shown in Grafana](docs/demos/tracing.gif)
 
-What the recording shows:
+In the recording, a patient's phone number is changed and saved. In Grafana, searching for that request's trace ID finds two log lines, one written by the browser and one by the API. The trace for the same ID follows the request from the browser, through the API, down to the SQL `UPDATE` that changed the row.
 
-- A patient's phone number is changed and saved in the app.
-- In Grafana, a search for the request's trace ID finds two log lines: one written by the browser and one written by the API.
-- The trace for the same ID shows the request starting in the browser, continuing in the API, and ending with the SQL statements, including the `UPDATE` that changed the row.
+This works because every API call carries a trace ID from the browser to the API, and both sides write that ID into their logs.
 
-Worth noting:
-
-- Every API call from the browser runs inside a span. Its trace ID travels to the API in a `traceparent` header, and the API continues the same trace through to its SQL queries.
-- Both ends write that trace ID into their logs: the API for every request, and the browser for every saved change and every failed call.
 - **Viewing.** Both send their logs and traces to Grafana at http://localhost:3000. In Grafana, open Explore, then choose Loki for logs (query `{service_name=~"healthcare-.+"}`) or Tempo for traces.
 - **Turning it off.** Set `OTLP_ENDPOINT=` (empty) in `.env`. The app works without Grafana.
 
