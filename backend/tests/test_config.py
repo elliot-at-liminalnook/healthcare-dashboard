@@ -37,3 +37,9 @@ def test_vercel_instances_keep_fewer_connections(monkeypatch: pytest.MonkeyPatch
     assert Settings().database_pool_size == 5
     monkeypatch.setenv("VERCEL", "1")
     assert Settings().database_pool_size == 2
+
+
+def test_the_api_is_served_under_a_prefix_on_vercel(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert Settings().api_prefix == ""
+    monkeypatch.setenv("VERCEL", "1")
+    assert Settings().api_prefix == "/api"

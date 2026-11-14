@@ -28,14 +28,18 @@ def create_app() -> FastAPI:
         await engine.dispose()
         shutdown_telemetry()
 
+    prefix = settings.api_prefix
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
         lifespan=lifespan,
         generate_unique_id_function=operation_id,
+        docs_url=f"{prefix}/docs",
+        redoc_url=None,
+        openapi_url=f"{prefix}/openapi.json",
     )
     app.middleware("http")(log_requests)
-    app.include_router(api_router)
+    app.include_router(api_router, prefix=prefix)
     shutdown_telemetry = setup_telemetry(app, settings)
     return app
 

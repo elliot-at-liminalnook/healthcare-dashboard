@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     def database_pool_size(self) -> int:
         return 2 if self.vercel else 5
 
+    @property
+    def api_prefix(self) -> str:
+        """Path the API is served under. Locally, nginx (or Vite) removes `/api`
+        before forwarding; Vercel forwards the path unchanged."""
+        return "/api" if self.vercel else ""
+
 
 @lru_cache
 def get_settings() -> Settings:

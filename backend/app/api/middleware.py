@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 import structlog
 from fastapi import Request, Response
 
+from app.core.config import get_settings
 from app.core.telemetry import UNTRACED_PATHS
 
 logger = structlog.get_logger(__name__)
@@ -13,7 +14,7 @@ async def log_requests(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     """Log one line per request with its method, path, status and duration."""
-    if request.url.path in UNTRACED_PATHS:
+    if request.url.path.removeprefix(get_settings().api_prefix) in UNTRACED_PATHS:
         return await call_next(request)
 
     start = time.perf_counter()
