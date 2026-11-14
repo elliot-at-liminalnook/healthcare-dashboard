@@ -82,7 +82,7 @@ Worth noting:
 | Frontend | React 19, TypeScript 7, Vite 8, Mantine 9, TanStack Query, React Router |
 | State management | Data from the server is held by TanStack Query. The patient list's view state is held in the URL. Form state is held by `@mantine/form`. The app does not use a global store. |
 | API client | TanStack Query hooks and Zod schemas, generated from the backend's OpenAPI schema by Orval |
-| Backend | Python 3.15, FastAPI, SQLAlchemy 2 (async, with asyncpg), Alembic, uv |
+| Backend | Python 3.14, FastAPI, SQLAlchemy 2 (async, with asyncpg), Alembic, uv |
 | Database | PostgreSQL 18 |
 | Logging and tracing | structlog and OpenTelemetry in the backend, the OpenTelemetry web SDK in the browser, and Grafana to view them |
 | Testing and tooling | pytest, Ruff, oxlint, Prettier, Playwright, GitHub Actions |

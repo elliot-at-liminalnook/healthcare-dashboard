@@ -13,7 +13,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from app.core.config import get_settings
 from app.core.db import SessionLocal, engine
@@ -55,8 +55,15 @@ def load_fixture() -> list[Patient]:
     return [patient_from_fixture(item) for item in json.loads(FIXTURE.read_text())["patients"]]
 
 
-async def seed() -> None:
+async def seed(*, reset: bool = False) -> None:
+    """Load the sample patients into an empty database.
+
+    With `reset`, existing patients (and their notes) are removed first, which
+    returns a public demo to its starting state.
+    """
     async with SessionLocal() as session:
+        if reset:
+            await session.execute(delete(Patient))
         existing = await session.scalar(select(func.count()).select_from(Patient))
         if existing:
             logger.info("seed_skipped", reason="patients already exist", patients=existing)
