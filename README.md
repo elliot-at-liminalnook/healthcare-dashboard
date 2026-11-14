@@ -37,14 +37,11 @@ What the recording shows:
 - Each patient has a page with their personal and medical information.
 - The sidebar can be collapsed. An unknown URL shows a "Page not found" page.
 
-How it is built:
+Worth noting:
 
-- **Layout and routing.** The header, sidebar and content area are a Mantine `AppShell`. It is the root route in React Router, and each page is rendered inside it.
-- **Large lists.** The server does the paging, searching and sorting, so the browser only holds one page of patients at a time. Each item in the list contains only the four fields the list displays.
-- **Non-blocking search.** Typing is debounced, so one request is sent when typing pauses. TanStack Query keeps the current rows on screen until the new results arrive.
-- **List state in the URL.** The page, search text, filter and sort order are stored in the URL's query string. A view can be bookmarked or shared, and the Back button returns to it.
-- **Typed API calls.** The frontend's API functions are generated from the backend's OpenAPI schema, so a call with the wrong parameters fails at build time.
-- **Errors.** An unknown patient returns 404. Invalid input returns 422 with a message for each invalid field.
+- The server does the paging, searching and sorting, so the browser holds one page of patients at a time.
+- While a search is loading, the current rows stay on screen until the new results arrive.
+- The page, search and sort order are stored in the URL, so a view can be shared and the Back button returns to it.
 
 ### Part 3: Patient notes
 
@@ -56,14 +53,10 @@ What the recording shows:
 - Notes are listed from newest to oldest. A note can be added or deleted, and deleting requires confirmation.
 - The summary is regenerated whenever a note is added or deleted.
 
-How it is built:
+Worth noting:
 
-- **Notes endpoints.** The notes routes are nested under `/patients/{id}`. A note is always looked up through its patient, so it cannot be read or deleted through another patient's URL.
-- **Summary endpoint.** The summary text is produced by a `Summarizer`, which the route receives as a dependency. The default, [`TemplateSummarizer`](backend/app/services/summary.py), builds the text from a template. It does not need an API key and does not send patient data to another service. A language model could replace it without changing the route.
-- **Summary text.** The summary has three paragraphs: who the patient is, their conditions and allergies, and a narrative of their notes in date order. The narrative quotes the first note and the most recent ones, and counts the notes in between.
-- **Keeping the page current.** After a note is added or deleted, TanStack Query refetches both the notes and the summary.
-- **Timestamps.** A note's timestamp must include a UTC offset and cannot be in the future.
-- **Components.** The timeline, form, date and time picker, confirmation dialog and notifications are all standard Mantine components.
+- The summary is written by a `Summarizer` that the route receives as a dependency. The default, [`TemplateSummarizer`](backend/app/services/summary.py), builds it from a template, so it needs no API key and sends no patient data to another service. A language model could replace it without changing the route.
+- A note is always looked up through its patient, so it cannot be read or deleted through another patient's URL.
 
 ### Part 4: Forms and validation
 
@@ -77,14 +70,10 @@ What the recording shows:
 - If the connection fails, an error is shown above the form and the form keeps what was entered.
 - Deleting a patient requires confirmation.
 
-How it is built:
+Worth noting:
 
-- **One set of validation rules.** The rules are written once, in the backend's Pydantic models in [`backend/app/schemas`](backend/app/schemas). They become part of the OpenAPI schema, and Orval generates Zod schemas from that schema for the form to use. Changing a rule in the backend and running `make client` updates the form.
-- **Error messages.** The browser's messages are worded in [`validation.ts`](frontend/src/api/validation.ts), for example "Required" and "Enter a valid email address". Each server rule returns a short sentence and a stable error code.
-- **Server errors.** [`fieldErrors`](frontend/src/api/errors.ts) converts the API's 422 response into one message per form field.
-- **Connection errors.** The fetch wrapper in [`http.ts`](frontend/src/api/http.ts) reports a failed connection separately from an error response, so the form can show a different message for each.
-- **Form state.** The form uses `@mantine/form`. The create page and the edit page use the same `PatientForm` component with different starting values.
-- **Date rules.** Rules that depend on today's date cannot be described in an OpenAPI schema. The date pickers do not allow future dates, and the server enforces every date rule.
+- The validation rules are written once, in the backend's Pydantic models in [`backend/app/schemas`](backend/app/schemas). Orval generates Zod schemas from the API's OpenAPI schema, and the form validates with those, so changing a rule in the backend changes the form.
+- Rules that depend on today's date cannot be described in an OpenAPI schema, so the server enforces them and the form shows its answer under the right field.
 
 ## Stack
 
@@ -191,11 +180,10 @@ What the recording shows:
 - In Grafana, a search for the request's trace ID finds two log lines: one written by the browser and one written by the API.
 - The trace for the same ID shows the request starting in the browser, continuing in the API, and ending with the SQL statements, including the `UPDATE` that changed the row.
 
-How it is built:
+Worth noting:
 
-- **Backend.** Each request produces one JSON log line with the method, path, status and duration. Each line includes the request's `trace_id`. Requests and SQL queries are traced.
-- **Browser.** Every API call goes through [`http.ts`](frontend/src/api/http.ts), which runs the call inside a span. The request carries that span's trace ID to the API in a `traceparent` header, and the API continues the same trace.
-- **Browser logs.** The `logger` in [`src/telemetry/logger.ts`](frontend/src/telemetry/logger.ts) writes to the console. Each change a user saves is logged with its trace ID, and so is each failed API call. Rendering errors and uncaught errors are logged automatically.
+- Every API call from the browser runs inside a span. Its trace ID travels to the API in a `traceparent` header, and the API continues the same trace through to its SQL queries.
+- Both ends write that trace ID into their logs: the API for every request, and the browser for every saved change and every failed call.
 - **Viewing.** Both send their logs and traces to Grafana at http://localhost:3000. In Grafana, open Explore, then choose Loki for logs (query `{service_name=~"healthcare-.+"}`) or Tempo for traces.
 - **Turning it off.** Set `OTLP_ENDPOINT=` (empty) in `.env`. The app works without Grafana.
 
