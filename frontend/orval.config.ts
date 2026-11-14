@@ -1,6 +1,8 @@
 import { defineConfig } from 'orval'
 
-// Generates typed TanStack Query hooks from the backend's OpenAPI schema.
+// Generates, from the backend's OpenAPI schema:
+//   - typed TanStack Query hooks (src/api/generated)
+//   - Zod schemas carrying the same validation rules (src/api/generated/zod)
 // Regenerate with `make client` from the repository root.
 export default defineConfig({
   api: {
@@ -17,6 +19,17 @@ export default defineConfig({
         mutator: { path: 'src/api/http.ts', name: 'http' },
         fetch: { includeHttpResponseReturnType: false },
       },
+    },
+  },
+  validation: {
+    input: './openapi.json',
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/generated/zod',
+      client: 'zod',
+      fileExtension: '.zod.ts',
+      clean: true,
+      prettier: true,
     },
   },
 })

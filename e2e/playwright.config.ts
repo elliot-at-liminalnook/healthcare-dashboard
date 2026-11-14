@@ -10,6 +10,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.BASE_URL ?? 'http://localhost:8080',
     viewport: { width: 1200, height: 750 },
+    actionTimeout: 10_000,
+    screenshot: 'only-on-failure',
     colorScheme: 'light',
     locale: 'en-US',
     timezoneId: 'America/Los_Angeles',

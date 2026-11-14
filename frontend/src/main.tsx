@@ -11,8 +11,13 @@ import { RouterProvider } from 'react-router'
 import { queryClient } from './app/queryClient.ts'
 import { router } from './app/router.tsx'
 import { theme } from './app/theme.ts'
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { initTelemetry } from './telemetry/index.ts'
 import { errorAttributes, logger } from './telemetry/logger.ts'
+
+// Lets date inputs parse what people type ("Mar 4, 1980"), not just what they pick.
+dayjs.extend(customParseFormat)
 
 function logRenderError(error: unknown, info: { componentStack?: string }): void {
   logger.error('React render error', {

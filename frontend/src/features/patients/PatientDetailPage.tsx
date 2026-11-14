@@ -12,7 +12,7 @@ import {
   Text,
   Title,
 } from '@mantine/core'
-import { IconArrowLeft } from '@tabler/icons-react'
+import { IconPencil } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import type { PatientRead } from '../../api/generated/model'
@@ -21,6 +21,8 @@ import { ApiError } from '../../api/http.ts'
 import { MessagePage } from '../../app/MessagePage.tsx'
 import { NotesSection } from '../notes/NotesSection.tsx'
 import { PatientSummaryCard } from '../notes/PatientSummaryCard.tsx'
+import { BackToPatients } from './BackToPatients.tsx'
+import { DeletePatientButton } from './DeletePatientButton.tsx'
 import { formatDate, fullName } from './format.ts'
 import { StatusBadge } from './StatusBadge.tsx'
 
@@ -74,17 +76,30 @@ function address(patient: PatientRead): ReactNode {
 function PatientDetails({ patient }: { patient: PatientRead }) {
   return (
     <Stack gap="lg">
-      <Group gap="md" wrap="nowrap">
-        <Avatar size={56} radius="xl" color="brand" name={fullName(patient)} />
-        <div>
-          <Group gap="sm">
-            <Title order={2}>{fullName(patient)}</Title>
-            <StatusBadge status={patient.status} />
-          </Group>
-          <Text c="dimmed">
-            {patient.age} years old · born {formatDate(patient.date_of_birth)}
-          </Text>
-        </div>
+      <Group justify="space-between" align="flex-start">
+        <Group gap="md" wrap="nowrap">
+          <Avatar size={56} radius="xl" color="brand" name={fullName(patient)} />
+          <div>
+            <Group gap="sm">
+              <Title order={2}>{fullName(patient)}</Title>
+              <StatusBadge status={patient.status} />
+            </Group>
+            <Text c="dimmed">
+              {patient.age} years old · born {formatDate(patient.date_of_birth)}
+            </Text>
+          </div>
+        </Group>
+        <Group gap="xs">
+          <Button
+            component={Link}
+            to={`/patients/${patient.id}/edit`}
+            variant="default"
+            leftSection={<IconPencil size={16} />}
+          >
+            Edit
+          </Button>
+          <DeletePatientButton patient={patient} />
+        </Group>
       </Group>
 
       <PatientSummaryCard patientId={patient.id} />
@@ -166,19 +181,6 @@ export function PatientDetailPage() {
   const { patientId = '' } = useParams()
   const { data: patient, error, refetch } = useGetPatient(patientId)
 
-  const backToList = (
-    <Button
-      component={Link}
-      to="/patients"
-      variant="subtle"
-      size="compact-sm"
-      leftSection={<IconArrowLeft size={16} />}
-      ml={-8}
-    >
-      Patients
-    </Button>
-  )
-
   // A malformed id is rejected by the API (422); to the user it is the same as not found.
   if (error instanceof ApiError && (error.status === 404 || error.status === 422)) {
     return (
@@ -205,7 +207,7 @@ export function PatientDetailPage() {
 
   return (
     <Stack gap="md">
-      <div>{backToList}</div>
+      <BackToPatients />
       {patient ? <PatientDetails patient={patient} /> : <LoadingDetails />}
     </Stack>
   )

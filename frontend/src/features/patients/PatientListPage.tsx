@@ -14,9 +14,10 @@ import {
   Title,
 } from '@mantine/core'
 import { useDebouncedCallback } from '@mantine/hooks'
-import { IconAlertTriangle, IconSearch } from '@tabler/icons-react'
+import { IconAlertTriangle, IconPlus, IconSearch } from '@tabler/icons-react'
 import { keepPreviousData } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { PatientStatus } from '../../api/generated/model'
 import { useListPatients } from '../../api/generated/patients/patients.ts'
 import { PatientTable } from './PatientTable.tsx'
@@ -66,13 +67,18 @@ export function PatientListPage() {
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="baseline">
-        <Title order={2}>Patients</Title>
-        {data && (
-          <Text c="dimmed" size="sm" aria-live="polite">
-            {total.toLocaleString()} {isFiltered ? 'matching' : 'total'}
-          </Text>
-        )}
+      <Group justify="space-between">
+        <Group align="baseline" gap="md">
+          <Title order={2}>Patients</Title>
+          {data && (
+            <Text c="dimmed" size="sm" aria-live="polite">
+              {total.toLocaleString()} {isFiltered ? 'matching' : 'total'}
+            </Text>
+          )}
+        </Group>
+        <Button component={Link} to="/patients/new" leftSection={<IconPlus size={16} />}>
+          Add patient
+        </Button>
       </Group>
 
       <Card p={0}>
