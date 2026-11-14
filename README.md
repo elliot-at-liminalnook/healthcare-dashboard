@@ -183,8 +183,19 @@ To reload the sample data, delete the database volume with `docker compose down 
 
 The backend and the browser both produce structured logs, and a single trace follows a request from the browser to the database.
 
+![A phone number is changed in the app, then the matching log lines and the trace are shown in Grafana](docs/demos/tracing.gif)
+
+What the recording shows:
+
+- A patient's phone number is changed and saved in the app.
+- In Grafana, a search for the request's trace ID finds two log lines: one written by the browser and one written by the API.
+- The trace for the same ID shows the request starting in the browser, continuing in the API, and ending with the SQL statements, including the `UPDATE` that changed the row.
+
+How it is built:
+
 - **Backend.** Each request produces one JSON log line with the method, path, status and duration. Each line includes the request's `trace_id`. Requests and SQL queries are traced.
-- **Browser.** The `logger` in [`src/telemetry/logger.ts`](frontend/src/telemetry/logger.ts) writes to the console. Failed API calls, rendering errors and uncaught errors are logged automatically. Each API call sends a `traceparent` header, which connects the backend's logs and spans to the browser's trace.
+- **Browser.** Every API call goes through [`http.ts`](frontend/src/api/http.ts), which runs the call inside a span. The request carries that span's trace ID to the API in a `traceparent` header, and the API continues the same trace.
+- **Browser logs.** The `logger` in [`src/telemetry/logger.ts`](frontend/src/telemetry/logger.ts) writes to the console. Each change a user saves is logged with its trace ID, and so is each failed API call. Rendering errors and uncaught errors are logged automatically.
 - **Viewing.** Both send their logs and traces to Grafana at http://localhost:3000. In Grafana, open Explore, then choose Loki for logs (query `{service_name=~"healthcare-.+"}`) or Tempo for traces.
 - **Turning it off.** Set `OTLP_ENDPOINT=` (empty) in `.env`. The app works without Grafana.
 

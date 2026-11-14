@@ -2,8 +2,7 @@
 // Draws what a headless browser does not: a mouse cursor, click ripples,
 // a subtitle bar and an opening title card. Nothing here intercepts input.
 ;(() => {
-  const config = window.__DEMO__ ?? {}
-  const FONT = "'Inter Variable', system-ui, sans-serif"
+  const FONT = "'Inter Variable', Inter, system-ui, sans-serif"
 
   const style = document.createElement('style')
   style.textContent = `
@@ -51,6 +50,9 @@
   }
 
   function mount() {
+    // Read here, not at the top: the recorder clears this once the title has
+    // been shown, so that later page loads (on any site) do not repeat it.
+    const config = window.__DEMO__ ?? {}
     document.head.append(style)
     document.body.append(caption, cursor)
     // Keep the cursor where it was across full page loads.

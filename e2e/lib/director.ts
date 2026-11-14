@@ -65,7 +65,17 @@ export class Director {
 
     await this.beat(1900)
     await this.page.evaluate(() => (window as any).__demoHideTitle?.())
+    // Later page loads, on this site or another, should not show the title again.
+    await this.page.addInitScript('window.__DEMO__ = {}')
     await this.beat(900)
+  }
+
+  /** Load another page (possibly on another site) and put the cursor back where it was. */
+  async goto(url: string): Promise<void> {
+    await this.caption('')
+    await this.page.goto(url)
+    await this.page.mouse.move(this.pointer.x + 1, this.pointer.y)
+    await this.page.mouse.move(this.pointer.x, this.pointer.y)
   }
 
   /** Stop recording and write the frame list (with timings) for ffmpeg. */

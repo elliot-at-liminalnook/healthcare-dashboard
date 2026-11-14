@@ -6,7 +6,7 @@
  * so the backend's spans and logs join the same trace.
  * Logs: whatever the application logger emits.
  */
-import { context, propagation, trace } from '@opentelemetry/api'
+import { context, propagation, trace, TraceFlags } from '@opentelemetry/api'
 import { logs, SeverityNumber } from '@opentelemetry/api-logs'
 import { W3CTraceContextPropagator } from '@opentelemetry/core'
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http'
@@ -66,12 +66,24 @@ export function startOtel(): LogSink {
   })
 
   const otelLogger = loggerProvider.getLogger('app')
-  return (level, message, attributes) => {
+  return (level, message, { trace_id, span_id, ...attributes }) => {
+    // A log about an API call names that call's trace. Attaching it as the
+    // record's trace context is what lets Grafana link the log to the trace.
+    const logContext =
+      typeof trace_id === 'string' && typeof span_id === 'string'
+        ? trace.setSpanContext(context.active(), {
+            traceId: trace_id,
+            spanId: span_id,
+            traceFlags: TraceFlags.SAMPLED,
+          })
+        : undefined
+
     otelLogger.emit({
       severityNumber: SEVERITY[level],
       severityText: level.toUpperCase(),
       body: message,
       attributes,
+      context: logContext,
     })
   }
 }

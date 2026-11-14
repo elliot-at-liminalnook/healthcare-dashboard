@@ -1,11 +1,14 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
-import { ApiError } from '../api/http.ts'
+import { ApiError, NetworkError } from '../api/http.ts'
 import { errorAttributes, logger } from '../telemetry/logger.ts'
 
 function apiErrorAttributes(error: unknown) {
+  const isApiFailure = error instanceof ApiError || error instanceof NetworkError
   return {
     ...errorAttributes(error),
-    'http.response.status_code': error instanceof ApiError ? error.status : undefined,
+    status: error instanceof ApiError ? error.status : undefined,
+    // The failed call's trace, so this log can be found alongside the backend's.
+    ...(isApiFailure ? error.trace : {}),
   }
 }
 
