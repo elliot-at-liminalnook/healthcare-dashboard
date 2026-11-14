@@ -4,6 +4,10 @@
 
 A patient management dashboard for a medical practice. The frontend is React and TypeScript, the backend is FastAPI, and the data is stored in PostgreSQL.
 
+**Live demo: https://healthcare-dashboard-eight-delta.vercel.app**
+
+The demo runs on sample data that is restored on every deploy, so feel free to add, edit and delete patients.
+
 ## Run locally
 
 Docker with Compose is the only requirement.
@@ -171,6 +175,14 @@ make dev
 ```
 
 This starts the same stack with the source code mounted into the containers. Saving a file in `backend/app` restarts the API. Saving a file in `frontend/src` updates the page in the browser without a reload. The URLs are the same as above.
+
+### Deployment
+
+The live demo runs on Vercel, with PostgreSQL from Neon. Every push to `main` is deployed.
+
+- [`vercel.json`](vercel.json) defines two services in one project: the frontend, and the API under `/api`.
+- Before each deploy, [`scripts/release.py`](backend/scripts/release.py) applies the database migrations and restores the sample data.
+- Log and trace export is turned off there, because the demo has no Grafana. Run the app locally to see it.
 
 ### Commands
 
