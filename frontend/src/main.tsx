@@ -1,6 +1,9 @@
 import '@fontsource-variable/inter'
 import { MantineProvider } from '@mantine/core'
 import '@mantine/core/styles.css'
+import '@mantine/dates/styles.css'
+import { Notifications } from '@mantine/notifications'
+import '@mantine/notifications/styles.css'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -26,6 +29,7 @@ function render(): void {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={theme}>
+          <Notifications position="top-right" />
           <RouterProvider router={router} />
         </MantineProvider>
       </QueryClientProvider>

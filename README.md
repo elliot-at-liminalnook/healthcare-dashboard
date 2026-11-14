@@ -39,6 +39,21 @@ The dashboard's counts link into a list of 200 patients that is paged, searched 
 | Typed API calls | Orval, generating TanStack Query hooks from the OpenAPI schema | `useListPatients({ search, sort_by })` is checked against the backend's own types at build time. |
 | Right status codes, useful errors | FastAPI and Pydantic | 404 for unknown ids; 422 with one message per invalid field. |
 
+### Part 3 · Patient notes
+
+![A patient's summary, adding a clinical note, the summary rewriting itself, and deleting the note](docs/demos/part-3-notes.gif)
+
+A patient's page opens with a summary written from their profile and notes. Notes are added and deleted in a timeline, and the summary rewrites itself as they change.
+
+| Capability | Made possible by | Why it is built this way |
+|---|---|---|
+| Add, list and delete notes | A FastAPI router nested under `/patients/{id}`, sharing one `PatientDep` dependency | Every notes route gets "load the patient or return 404" for free. A note is only ever looked up through its patient, so it cannot be deleted through another patient's URL. |
+| The summary endpoint | A `Summarizer` protocol, injected with FastAPI `Depends`; [`TemplateSummarizer`](backend/app/services/summary.py) by default | The route does not know how the text is produced. The default is deterministic, needs no API key and sends patient data nowhere. A language model is a drop-in replacement, and a test swaps the summariser to prove the seam. |
+| A narrative, not a list | Sentence-boundary excerpts, in time order, dated in the practice's time zone (`zoneinfo`) | It opens with the first note, counts the ones in between, and quotes the most recent, so it reads the same for 2 notes or 20. |
+| Summary and timeline stay in step | TanStack Query cache invalidation | Adding or deleting a note marks both queries stale and they refetch. There is no hand-written state to keep in sync. |
+| Timeline, form, date-time picker, confirm dialog, toasts | Mantine `Timeline`, `@mantine/form`, `DateTimePicker`, `Modal`, `@mantine/notifications` | Standard components throughout. An empty note is caught in the browser; anything the server rejects is shown under the field it concerns. |
+| Unambiguous timestamps | Pydantic `AwareDatetime` | A note's time must carry a UTC offset and cannot be in the future, so "when" means the same instant everywhere. |
+
 ## Stack
 
 | Layer | Choice |
@@ -71,7 +86,7 @@ frontend/
   src/
     api/          http.ts (fetch wrapper) and generated/ (typed client, do not edit)
     app/          router, layout, theme, query client, error pages
-    features/     one folder per feature (dashboard, patients)
+    features/     one folder per feature (dashboard, patients, notes)
     telemetry/    logger and OpenTelemetry setup
 docker-compose.yml
 ```
@@ -86,6 +101,10 @@ docker-compose.yml
 | `POST /patients` | Create a patient (201) |
 | `PUT /patients/{id}` | Replace a patient |
 | `DELETE /patients/{id}` | Delete a patient and their notes (204) |
+| `GET /patients/{id}/notes` | The patient's notes, newest first |
+| `POST /patients/{id}/notes` | Add a note: `timestamp` (with UTC offset) and `content` (201) |
+| `DELETE /patients/{id}/notes/{note_id}` | Delete a note (204) |
+| `GET /patients/{id}/summary` | A readable summary: identifiers, conditions and allergies, and a narrative of the notes |
 
 - The list returns `{items, total, page, page_size}`, and each item carries only what the list shows (name, age, status, last visit), not contact or medical details.
 - Unknown ids return 404. Invalid input returns 422 with one entry per problem, each naming its field, a stable `type` code and a plain-language message, for example `{"loc": ["body", "date_of_birth"], "type": "date_in_future", "msg": "Cannot be in the future"}`.

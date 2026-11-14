@@ -114,6 +114,14 @@ export class Director {
     this.pointer = end
   }
 
+  /** Scroll an element to the middle of the screen, smoothly. */
+  async scrollTo(target: Locator, afterMs = 500): Promise<void> {
+    await target.evaluate((element) =>
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    )
+    await this.beat(650 + afterMs)
+  }
+
   async click(target: Locator, afterMs = 700): Promise<void> {
     await this.moveTo(target)
     await this.beat(160)
@@ -128,7 +136,7 @@ export class Director {
     await this.click(target, 250)
     for (const character of text) {
       await this.page.keyboard.type(character)
-      await this.page.waitForTimeout(70 + Math.random() * 80)
+      await this.page.waitForTimeout(24 + Math.random() * 40)
     }
     await this.beat(afterMs)
   }

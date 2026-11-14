@@ -1,0 +1,4 @@
+/* A brand-coloured edge marks this card as generated, not entered. */
+.card {
+  border-left: 4px solid var(--mantine-primary-color-filled);
+}

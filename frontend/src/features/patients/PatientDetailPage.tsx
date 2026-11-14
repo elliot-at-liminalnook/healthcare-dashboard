@@ -19,6 +19,8 @@ import type { PatientRead } from '../../api/generated/model'
 import { useGetPatient } from '../../api/generated/patients/patients.ts'
 import { ApiError } from '../../api/http.ts'
 import { MessagePage } from '../../app/MessagePage.tsx'
+import { NotesSection } from '../notes/NotesSection.tsx'
+import { PatientSummaryCard } from '../notes/PatientSummaryCard.tsx'
 import { formatDate, fullName } from './format.ts'
 import { StatusBadge } from './StatusBadge.tsx'
 
@@ -85,6 +87,8 @@ function PatientDetails({ patient }: { patient: PatientRead }) {
         </div>
       </Group>
 
+      <PatientSummaryCard patientId={patient.id} />
+
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         <Card>
           <Title order={3} size="h5" mb="md">
@@ -134,6 +138,8 @@ function PatientDetails({ patient }: { patient: PatientRead }) {
           </Grid>
         </Card>
       </SimpleGrid>
+
+      <NotesSection patientId={patient.id} />
     </Stack>
   )
 }

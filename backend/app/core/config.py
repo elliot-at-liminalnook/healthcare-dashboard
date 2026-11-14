@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     service_name: str = "healthcare-backend"
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/healthcare"
     log_level: str = "INFO"
+    # Time zone the practice works in; dates in generated summaries are shown in it.
+    practice_timezone: str = "America/Los_Angeles"
     # Base URL of an OTLP/HTTP collector, e.g. http://localhost:4318. Unset disables export.
     otel_exporter_otlp_endpoint: str | None = None
 
