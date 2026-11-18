@@ -2,16 +2,30 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 
 from app.core.db import SessionDep
 from app.models import Patient, PatientStatus
-from app.schemas.patient import Page, PatientListItem, PatientRead, PatientWrite
+from app.schemas.patient import (
+    Page,
+    PatientConflict,
+    PatientListItem,
+    PatientRead,
+    PatientReplace,
+    PatientWrite,
+)
 from app.services import patients as patient_service
-from app.services.patients import PatientSort, SortOrder
+from app.services.patients import PatientChangedError, PatientSort, SortOrder
 
 router = APIRouter(prefix="/patients", tags=["patients"])
 
 NOT_FOUND = {status.HTTP_404_NOT_FOUND: {"description": "Patient not found"}}
+CONFLICT = {
+    status.HTTP_409_CONFLICT: {
+        "model": PatientConflict,
+        "description": "The patient was changed after the version being saved was loaded",
+    }
+}
 
 
 async def patient_or_404(patient_id: uuid.UUID, session: SessionDep) -> Patient:
@@ -63,9 +77,20 @@ async def get_patient(patient: PatientDep) -> Patient:
     return patient
 
 
-@router.put("/{patient_id}", responses=NOT_FOUND, response_model=PatientRead)
-async def replace_patient(patient: PatientDep, data: PatientWrite, session: SessionDep) -> Patient:
-    return await patient_service.replace_patient(session, patient, data)
+@router.put("/{patient_id}", responses=NOT_FOUND | CONFLICT, response_model=PatientRead)
+async def replace_patient(
+    patient: PatientDep, data: PatientReplace, session: SessionDep
+) -> Patient | JSONResponse:
+    try:
+        return await patient_service.replace_patient(session, patient, data)
+    except PatientChangedError as error:
+        if error.current is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Patient not found") from None
+        conflict = PatientConflict(
+            detail="This patient was changed after you opened it",
+            current=PatientRead.model_validate(error.current),
+        )
+        return JSONResponse(conflict.model_dump(mode="json"), status.HTTP_409_CONFLICT)
 
 
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT, responses=NOT_FOUND)

@@ -24,7 +24,9 @@ import type {
   HTTPValidationError,
   ListPatientsParams,
   PagePatientListItem,
+  PatientConflict,
   PatientRead,
+  PatientReplace,
   PatientWrite,
 } from '../model'
 
@@ -492,7 +494,7 @@ export const getReplacePatientUrl = (patientId: string) => {
  */
 export const replacePatient = async (
   patientId: string,
-  patientWrite: PatientWrite,
+  patientReplace: PatientReplace,
   options?: Parameters<typeof http>[1],
 ): Promise<PatientRead> => {
   const getHeaders = (
@@ -518,14 +520,14 @@ export const replacePatient = async (
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(patientWrite),
+    body: JSON.stringify(patientReplace),
   })
 }
 
 export const getReplacePatientMutationKey = () => ['replacePatient'] as const
 
 export const getReplacePatientMutationOptions = <
-  TError = void | HTTPValidationError,
+  TError = void | PatientConflict | HTTPValidationError,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -561,12 +563,15 @@ export const getReplacePatientMutationOptions = <
 }
 
 export type ReplacePatientMutationResult = NonNullable<Awaited<ReturnType<typeof replacePatient>>>
-export type ReplacePatientMutationBody = PatientWrite
-export type ReplacePatientMutationError = void | HTTPValidationError
-export type ReplacePatientMutationVariables = { patientId: string; data: PatientWrite }
+export type ReplacePatientMutationBody = PatientReplace
+export type ReplacePatientMutationError = void | PatientConflict | HTTPValidationError
+export type ReplacePatientMutationVariables = { patientId: string; data: PatientReplace }
 
 /** @summary Replace Patient */
-export const useReplacePatient = <TError = void | HTTPValidationError, TContext = unknown>(
+export const useReplacePatient = <
+  TError = void | PatientConflict | HTTPValidationError,
+  TContext = unknown,
+>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof replacePatient>>,

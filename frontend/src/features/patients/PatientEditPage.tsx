@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications'
 import { IconCheck } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
-import type { PatientWrite } from '../../api/generated/model'
+import type { PatientConflict, PatientWrite } from '../../api/generated/model'
 import { getGetPatientSummaryQueryKey } from '../../api/generated/notes/notes.ts'
 import {
   getGetPatientQueryKey,
@@ -18,15 +18,46 @@ import { fullName } from './format.ts'
 import { PatientForm } from './PatientForm.tsx'
 import { toFormValues } from './patientForm.ts'
 
+/** How often to check whether someone else has saved the patient being edited. */
+const CHECK_FOR_CHANGES_MS = 10_000
+
+function isConflict(error: unknown): error is ApiError & { body: PatientConflict } {
+  return (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    typeof error.body === 'object' &&
+    error.body !== null &&
+    'current' in error.body
+  )
+}
+
 export function PatientEditPage() {
   const { patientId = '' } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: patient, error, refetch } = useGetPatient(patientId)
+  // Re-read while the form is open, so a change saved in another session shows up here.
+  const {
+    data: patient,
+    error,
+    refetch,
+  } = useGetPatient(patientId, { query: { refetchInterval: CHECK_FOR_CHANGES_MS } })
   const replacePatient = useReplacePatient()
 
   async function save(data: PatientWrite) {
-    const updated = await replacePatient.mutateAsync({ patientId, data })
+    let updated
+    try {
+      // The server refuses the save if the patient is no longer at this version.
+      updated = await replacePatient.mutateAsync({
+        patientId,
+        data: { ...data, version: patient!.version },
+      })
+    } catch (error) {
+      // Refused: someone saved first. Hand their copy to the form, which shows what changed.
+      if (isConflict(error)) {
+        queryClient.setQueryData(getGetPatientQueryKey(patientId), error.body.current)
+      }
+      throw error
+    }
     // Show the saved record at once; lists and the summary refetch.
     queryClient.setQueryData(getGetPatientQueryKey(patientId), updated)
     queryClient.invalidateQueries({ queryKey: getListPatientsQueryKey() })
@@ -52,7 +83,8 @@ export function PatientEditPage() {
       />
     )
   }
-  if (error) {
+  // A failed re-read must not take the form, and what has been typed, off the screen.
+  if (error && !patient) {
     return (
       <MessagePage
         title="Could not load this patient"
@@ -73,6 +105,7 @@ export function PatientEditPage() {
             submitLabel="Save changes"
             cancelTo={`/patients/${patientId}`}
             onSubmit={save}
+            saved={{ version: patient.version, values: toFormValues(patient) }}
           />
         </>
       ) : (

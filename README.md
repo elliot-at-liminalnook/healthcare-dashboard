@@ -89,6 +89,16 @@ One form handles both adding and editing a patient. It catches missing fields an
 - The validation rules are written once, in the backend ([`backend/app/schemas`](backend/app/schemas)). The form's checks are generated from the API's schema, so the two always agree.
 - A few rules depend on today's date, which that schema can't express. The server checks those, and the form shows its answer.
 
+### Two people editing the same patient
+
+![One person edits a patient while a colleague saves changes in another browser; the open form reports the change, and a save that would overwrite it is refused](docs/demos/concurrent-edits.gif)
+
+If two people have the same patient open, neither can silently overwrite the other. The form being edited notices within seconds that the patient was saved elsewhere and says so. Fields you haven't touched show the new values. Where you both changed the same field, what you typed is kept and their value is shown next to it, one click away.
+
+- Every patient has a version number that goes up with each change. A save says which version it started from, and the API refuses it (409) if the patient has moved on, returning the current record. The check is part of the SQL `UPDATE`, so two saves at the same moment can't both succeed.
+- The form checks for changes every ten seconds and whenever you return to the tab. A refused save is shown the same way, with nothing typed lost.
+- There are no user accounts yet, so the message can say that the patient was changed, but not by whom.
+
 ### Logging and tracing
 
 ![A phone number is changed in the app, then the matching log lines and the trace are shown in Grafana](docs/demos/tracing.gif)

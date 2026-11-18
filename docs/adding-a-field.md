@@ -91,6 +91,7 @@ In [`frontend/src/features/patients/patientForm.ts`](../frontend/src/features/pa
 
 - `PatientFormValues`: `preferred_name: string`
 - `EMPTY_PATIENT`: `preferred_name: ''`
+- `FIELD_LABELS`: `preferred_name: 'Preferred name'` (the name shown on the form and in messages about changes)
 - `toFormValues`: `preferred_name: patient.preferred_name ?? ''`
 - `toRequestBody`: `preferred_name: text(values.preferred_name)`
 
@@ -99,7 +100,7 @@ The `toRequestBody` line turns an empty input into `null`. Without it the form s
 In [`frontend/src/features/patients/PatientForm.tsx`](../frontend/src/features/patients/PatientForm.tsx):
 
 ```tsx
-<TextInput label="Preferred name" autoComplete="off" {...field('preferred_name')} />
+<TextInput label={FIELD_LABELS.preferred_name} autoComplete="off" {...field('preferred_name')} />
 ```
 
 You don't need to write any validation for it. The form already checks every field against the generated schema.

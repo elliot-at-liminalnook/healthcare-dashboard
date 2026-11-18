@@ -294,11 +294,12 @@ async def test_put_replaces_every_field(client: AsyncClient, session: AsyncSessi
     patient = make_patient(email="old@example.com", allergies=["Latex"], city="Tacoma")
     await add(session, patient)
 
-    response = await client.put(f"/patients/{patient.id}", json=VALID_BODY)
+    response = await client.put(f"/patients/{patient.id}", json=VALID_BODY | {"version": 1})
 
     assert response.status_code == 200
     body = response.json()
     assert body["id"] == str(patient.id)
+    assert body["version"] == 2
     assert (body["first_name"], body["email"]) == ("Grace", "grace.hopper@example.com")
     assert body["allergies"] == ["Penicillin"]
     assert body["city"] is None  # omitted from the body, so cleared
@@ -308,11 +309,47 @@ async def test_put_validates_and_404s(client: AsyncClient, session: AsyncSession
     patient = make_patient()
     await add(session, patient)
 
-    invalid = await client.put(f"/patients/{patient.id}", json=VALID_BODY | {"email": "nope"})
-    missing = await client.put(f"/patients/{uuid.uuid4()}", json=VALID_BODY)
+    current = VALID_BODY | {"version": 1}
+    invalid = await client.put(f"/patients/{patient.id}", json=current | {"email": "nope"})
+    unversioned = await client.put(f"/patients/{patient.id}", json=VALID_BODY)
+    missing = await client.put(f"/patients/{uuid.uuid4()}", json=current)
 
     assert invalid.status_code == 422
+    assert unversioned.status_code == 422
+    assert unversioned.json()["detail"][0]["loc"] == ["body", "version"]
     assert missing.status_code == 404
+
+
+async def test_put_based_on_an_old_version_is_refused(client: AsyncClient) -> None:
+    created = (await client.post("/patients", json=VALID_BODY)).json()
+    url = f"/patients/{created['id']}"
+    assert created["version"] == 1
+
+    # Two people open the same record, then each saves a different change.
+    first = await client.put(url, json=VALID_BODY | {"version": 1, "phone": "(206) 555-0111"})
+    second = await client.put(url, json=VALID_BODY | {"version": 1, "city": "Tacoma"})
+
+    assert first.status_code == 200
+    assert second.status_code == 409
+    conflict = second.json()
+    assert conflict["detail"] == "This patient was changed after you opened it"
+    # The refusal carries the record as it is now, and nothing was overwritten.
+    assert conflict["current"] == first.json()
+    assert (await client.get(url)).json() == first.json()
+
+    # Saving again from the current version succeeds.
+    retry = await client.put(url, json=VALID_BODY | {"version": 2, "city": "Tacoma"})
+    assert retry.status_code == 200
+    assert (retry.json()["version"], retry.json()["city"]) == (3, "Tacoma")
+
+
+async def test_saving_without_changes_keeps_the_version(client: AsyncClient) -> None:
+    created = (await client.post("/patients", json=VALID_BODY)).json()
+
+    response = await client.put(f"/patients/{created['id']}", json=VALID_BODY | {"version": 1})
+
+    assert response.status_code == 200
+    assert response.json()["version"] == 1
 
 
 # --- Delete -----------------------------------------------------------------

@@ -154,6 +154,7 @@ export const CreatePatientResponse = zod
     state: zod.union([zod.string(), zod.null()]),
     status: zod.enum(['active', 'inactive', 'critical']),
     updated_at: zod.iso.datetime({ offset: true }),
+    version: zod.int(),
   })
   .describe('A full patient record.')
 
@@ -198,6 +199,7 @@ export const GetPatientResponse = zod
     state: zod.union([zod.string(), zod.null()]),
     status: zod.enum(['active', 'inactive', 'critical']),
     updated_at: zod.iso.datetime({ offset: true }),
+    version: zod.int(),
   })
   .describe('A full patient record.')
 
@@ -279,8 +281,9 @@ export const ReplacePatientBody = zod
       .union([zod.string().min(1).max(replacePatientBodyStateOneMax), zod.null()])
       .optional(),
     status: zod.enum(['active', 'inactive', 'critical']).default(replacePatientBodyStatusDefault),
+    version: zod.int(),
   })
-  .describe('Body for creating a patient, or replacing one (PUT).')
+  .describe('Body for replacing a patient (PUT).')
 
 export const ReplacePatientResponse = zod
   .object({
@@ -307,5 +310,6 @@ export const ReplacePatientResponse = zod
     state: zod.union([zod.string(), zod.null()]),
     status: zod.enum(['active', 'inactive', 'critical']),
     updated_at: zod.iso.datetime({ offset: true }),
+    version: zod.int(),
   })
   .describe('A full patient record.')

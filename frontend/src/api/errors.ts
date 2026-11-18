@@ -34,6 +34,9 @@ export function errorMessage(error: unknown): string {
   }
   if (error instanceof ApiError) {
     if (error.status === 404) return 'This record no longer exists. It may have been deleted.'
+    if (error.status === 409) {
+      return 'This record was changed in another session while you were editing. Review the changes shown here, then save again.'
+    }
     if (error.status === 422) return fieldErrors(error)[''] ?? 'Some fields need attention.'
     if (error.status >= 500) return 'The server ran into a problem. Please try again shortly.'
   }

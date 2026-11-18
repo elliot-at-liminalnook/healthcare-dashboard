@@ -1,6 +1,8 @@
 import type { BloodType, PatientRead, PatientStatus, PatientWrite } from '../../api/generated/model'
 import { CreatePatientBody } from '../../api/generated/zod/patients/patients.zod.ts'
 import { validate } from '../../api/validation.ts'
+import { formatDate } from './format.ts'
+import { STATUS_DISPLAY } from './status.ts'
 
 /** What the form holds. Text inputs are always strings, so "empty" is `''`, not `null`. */
 export interface PatientFormValues {
@@ -39,6 +41,28 @@ export const EMPTY_PATIENT: PatientFormValues = {
   conditions: [],
   status: 'active',
   last_visit: null,
+}
+
+export type PatientField = keyof PatientFormValues
+
+/** What each field is called on screen. */
+export const FIELD_LABELS: Record<PatientField, string> = {
+  first_name: 'First name',
+  last_name: 'Last name',
+  preferred_name: 'Preferred name',
+  date_of_birth: 'Date of birth',
+  email: 'Email',
+  phone: 'Phone',
+  address_line1: 'Address',
+  address_line2: 'Apartment, unit or suite',
+  city: 'City',
+  state: 'State',
+  postal_code: 'Postal code',
+  blood_type: 'Blood type',
+  allergies: 'Allergies',
+  conditions: 'Conditions',
+  status: 'Status',
+  last_visit: 'Last visit',
 }
 
 export function toFormValues(patient: PatientRead): PatientFormValues {
@@ -90,6 +114,46 @@ export function validatePatient(values: PatientFormValues): Record<string, strin
 /** The request body for values that have passed `validatePatient`. */
 export function toPatientWrite(values: PatientFormValues): PatientWrite {
   return CreatePatientBody.parse(toRequestBody(values))
+}
+
+const sameValue = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+/** What a newer copy of the record means for a form that is part-way through an edit. */
+export interface IncomingChanges {
+  /** Changed elsewhere and not touched here: safe to show the new value. */
+  updated: PatientField[]
+  /** Changed elsewhere and also edited here, to something different. Holds the other value. */
+  conflicts: Partial<PatientFormValues>
+}
+
+/**
+ * Compare a newer copy of the record (`incoming`) with the copy the form
+ * started from (`baseline`) and what the form holds now (`current`).
+ */
+export function incomingChanges(
+  baseline: PatientFormValues,
+  current: PatientFormValues,
+  incoming: PatientFormValues,
+): IncomingChanges {
+  const changes: IncomingChanges = { updated: [], conflicts: {} }
+  for (const name of Object.keys(FIELD_LABELS) as PatientField[]) {
+    if (sameValue(incoming[name], baseline[name])) continue // not changed elsewhere
+    if (sameValue(current[name], incoming[name])) continue // both made the same change
+    if (sameValue(current[name], baseline[name])) changes.updated.push(name)
+    else Object.assign(changes.conflicts, { [name]: incoming[name] })
+  }
+  return changes
+}
+
+/** A field's value as a person would read it, for messages about changes. */
+export function displayValue(name: PatientField, value: PatientFormValues[PatientField]): string {
+  if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+    return 'nothing'
+  }
+  if (Array.isArray(value)) return value.join(', ')
+  if (name === 'date_of_birth' || name === 'last_visit') return formatDate(value)
+  if (name === 'status') return STATUS_DISPLAY[value as PatientStatus].label
+  return value
 }
 
 export const COMMON_ALLERGIES = [

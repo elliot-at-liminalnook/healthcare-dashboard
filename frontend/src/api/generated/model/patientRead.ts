@@ -31,4 +31,5 @@ export interface PatientRead {
   state: string | null
   status: PatientStatus
   updated_at: string
+  version: number
 }

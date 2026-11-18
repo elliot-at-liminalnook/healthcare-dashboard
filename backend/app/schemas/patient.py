@@ -142,6 +142,14 @@ class PatientWrite(BaseModel):
         return value
 
 
+class PatientReplace(PatientWrite):
+    """Body for replacing a patient (PUT)."""
+
+    # The `version` of the record the edit started from. If the record has been
+    # changed since, the save is refused (409) rather than undoing that change.
+    version: int
+
+
 class PatientListItem(BaseModel):
     """The fields the patient list shows. Contact and medical details are left out."""
 
@@ -176,6 +184,14 @@ class PatientRead(PatientListItem):
     conditions: list[str]
     created_at: datetime
     updated_at: datetime
+    version: int
+
+
+class PatientConflict(BaseModel):
+    """Why a save was refused (409), with the record as it is now."""
+
+    detail: str
+    current: PatientRead
 
 
 class Page[T](BaseModel):

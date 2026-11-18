@@ -6,9 +6,19 @@ from collections.abc import Sequence
 
 from sqlalchemy import ColumnElement, case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.models import Patient, PatientStatus
-from app.schemas.patient import PatientWrite
+from app.schemas.patient import PatientReplace, PatientWrite
+
+
+class PatientChangedError(Exception):
+    """The patient was changed after the copy being saved was read."""
+
+    def __init__(self, current: Patient | None) -> None:
+        super().__init__("The patient has been changed since it was loaded")
+        # The record as it is now, or None if it has been deleted.
+        self.current = current
 
 
 class PatientSort(enum.StrEnum):
@@ -99,10 +109,19 @@ async def create_patient(session: AsyncSession, data: PatientWrite) -> Patient:
     return patient
 
 
-async def replace_patient(session: AsyncSession, patient: Patient, data: PatientWrite) -> Patient:
-    for field, value in data.model_dump().items():
+async def replace_patient(session: AsyncSession, patient: Patient, data: PatientReplace) -> Patient:
+    """Replace a patient's fields, unless the record has moved on from `data.version`."""
+    if data.version != patient.version:
+        raise PatientChangedError(patient)
+    for field, value in data.model_dump(exclude={"version"}).items():
         setattr(patient, field, value)
-    await session.commit()
+    try:
+        await session.commit()
+    except StaleDataError:
+        # Another save landed between reading the patient and writing it.
+        await session.rollback()
+        current = await session.get(Patient, patient.id, populate_existing=True)
+        raise PatientChangedError(current) from None
     await session.refresh(patient)
     return patient
 

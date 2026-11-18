@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -73,6 +73,12 @@ class Patient(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    # Goes up by one each time the record changes. An edit says which version it
+    # started from, so a save based on an out-of-date copy can be refused.
+    version: Mapped[int] = mapped_column(Integer, server_default="1")
+    # SQLAlchemy increments it and adds "WHERE version = <the one loaded>" to every
+    # UPDATE, so two saves that race cannot both succeed.
+    __mapper_args__ = {"version_id_col": version}
 
     notes: Mapped[list[PatientNote]] = relationship(
         back_populates="patient",
