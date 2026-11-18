@@ -53,6 +53,8 @@ Most changes are short because of this. To add a field to a patient, for example
 3. Run `make client`. The TypeScript types and the form's validation schema now include the field.
 4. Add the field to the form, and show it on the patient page.
 
+[Adding a field to a patient](docs/adding-a-field.md) has the exact commands for each step, and what to do if one fails.
+
 The form checks the new field against its rule without any validation code being written for it, and the TypeScript build checks every place the frontend reads it. A new endpoint works the same way: write the route, run `make client`, and call the generated hook.
 
 ## Feature tour
