@@ -114,6 +114,9 @@ function PatientDetails({ patient }: { patient: PatientRead }) {
               <Field label="Date of birth">{formatDate(patient.date_of_birth)}</Field>
             </Grid.Col>
             <Grid.Col span={6}>
+              <Field label="Preferred name">{patient.preferred_name}</Field>
+            </Grid.Col>
+            <Grid.Col span={6}>
               <Field label="Phone">{patient.phone}</Field>
             </Grid.Col>
             <Grid.Col span={12}>

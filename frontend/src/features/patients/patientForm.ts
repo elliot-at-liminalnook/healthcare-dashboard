@@ -6,6 +6,7 @@ import { validate } from '../../api/validation.ts'
 export interface PatientFormValues {
   first_name: string
   last_name: string
+  preferred_name: string
   date_of_birth: string | null
   email: string
   phone: string
@@ -24,6 +25,7 @@ export interface PatientFormValues {
 export const EMPTY_PATIENT: PatientFormValues = {
   first_name: '',
   last_name: '',
+  preferred_name: '',
   date_of_birth: null,
   email: '',
   phone: '',
@@ -43,6 +45,7 @@ export function toFormValues(patient: PatientRead): PatientFormValues {
   return {
     first_name: patient.first_name,
     last_name: patient.last_name,
+    preferred_name: patient.preferred_name ?? '',
     date_of_birth: patient.date_of_birth,
     email: patient.email ?? '',
     phone: patient.phone ?? '',
@@ -66,6 +69,7 @@ function toRequestBody(values: PatientFormValues) {
     ...values,
     first_name: values.first_name.trim(),
     last_name: values.last_name.trim(),
+    preferred_name: text(values.preferred_name),
     // Left out when empty, so the schema reports it as a missing required field.
     date_of_birth: values.date_of_birth ?? undefined,
     email: text(values.email),

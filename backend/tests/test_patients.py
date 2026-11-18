@@ -67,7 +67,8 @@ async def test_list_items_carry_only_the_list_fields(
 
     assert item["age"] == age_on(born, date.today())
     assert set(item) == {
-        "id", "first_name", "last_name", "date_of_birth", "age", "status", "last_visit"
+        "id", "first_name", "last_name", "preferred_name",
+        "date_of_birth", "age", "status", "last_visit",
     }  # fmt: skip
 
 
@@ -180,6 +181,35 @@ async def test_create_returns_201_and_the_stored_patient(client: AsyncClient) ->
 
     fetched = await client.get(f"/patients/{created['id']}")
     assert fetched.json() == created
+
+
+async def test_create_accepts_and_trims_preferred_name(client: AsyncClient) -> None:
+    response = await client.post(
+        "/patients",
+        json=VALID_BODY | {"preferred_name": "  Dr. O'Neill-Smith  "},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["preferred_name"] == "Dr. O'Neill-Smith"
+
+
+@pytest.mark.parametrize(
+    ("preferred_name", "error_type"),
+    [
+        ("A", "preferred_name_too_short"),
+        ("A" * 51, "preferred_name_too_long"),
+        ("Ada123", "preferred_name_invalid_characters"),
+    ],
+)
+async def test_preferred_name_rules_are_reported(
+    client: AsyncClient, preferred_name: str, error_type: str
+) -> None:
+    response = await client.post("/patients", json=VALID_BODY | {"preferred_name": preferred_name})
+
+    assert response.status_code == 422
+    [error] = response.json()["detail"]
+    assert error["loc"] == ["body", "preferred_name"]
+    assert error["type"] == error_type
 
 
 async def test_create_applies_defaults_and_treats_blank_strings_as_absent(

@@ -167,6 +167,17 @@
             ],
             "title": "Last Visit"
           },
+          "preferred_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Name"
+          },
           "status": {
             "$ref": "#/components/schemas/PatientStatus"
           }
@@ -175,6 +186,7 @@
           "id",
           "first_name",
           "last_name",
+          "preferred_name",
           "date_of_birth",
           "status",
           "last_visit",
@@ -316,6 +328,17 @@
             ],
             "title": "Postal Code"
           },
+          "preferred_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Name"
+          },
           "state": {
             "anyOf": [
               {
@@ -340,6 +363,7 @@
           "id",
           "first_name",
           "last_name",
+          "preferred_name",
           "date_of_birth",
           "status",
           "last_visit",
@@ -591,6 +615,20 @@
               }
             ],
             "title": "Postal Code"
+          },
+          "preferred_name": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 2,
+                "pattern": "^[A-Za-z .'-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Name"
           },
           "state": {
             "anyOf": [

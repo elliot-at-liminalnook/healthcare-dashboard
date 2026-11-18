@@ -42,6 +42,7 @@ export const ListPatientsResponse = zod.object({
         id: zod.uuid(),
         last_name: zod.string(),
         last_visit: zod.union([zod.iso.date(), zod.null()]),
+        preferred_name: zod.union([zod.string(), zod.null()]),
         status: zod.enum(['active', 'inactive', 'critical']),
       })
       .describe('The fields the patient list shows. Contact and medical details are left out.'),
@@ -74,6 +75,10 @@ export const createPatientBodyPhoneOneMax = 32
 
 export const createPatientBodyPostalCodeOneMax = 20
 
+export const createPatientBodyPreferredNameOneMin = 2
+export const createPatientBodyPreferredNameOneMax = 50
+
+export const createPatientBodyPreferredNameOneRegExp = new RegExp("^[A-Za-z .'-]+$")
 export const createPatientBodyStateOneMax = 100
 
 export const createPatientBodyStatusDefault = `active`
@@ -107,6 +112,16 @@ export const CreatePatientBody = zod
     postal_code: zod
       .union([zod.string().min(1).max(createPatientBodyPostalCodeOneMax), zod.null()])
       .optional(),
+    preferred_name: zod
+      .union([
+        zod
+          .string()
+          .min(createPatientBodyPreferredNameOneMin)
+          .max(createPatientBodyPreferredNameOneMax)
+          .regex(createPatientBodyPreferredNameOneRegExp),
+        zod.null(),
+      ])
+      .optional(),
     state: zod
       .union([zod.string().min(1).max(createPatientBodyStateOneMax), zod.null()])
       .optional(),
@@ -135,6 +150,7 @@ export const CreatePatientResponse = zod
     last_visit: zod.union([zod.iso.date(), zod.null()]),
     phone: zod.union([zod.string(), zod.null()]),
     postal_code: zod.union([zod.string(), zod.null()]),
+    preferred_name: zod.union([zod.string(), zod.null()]),
     state: zod.union([zod.string(), zod.null()]),
     status: zod.enum(['active', 'inactive', 'critical']),
     updated_at: zod.iso.datetime({ offset: true }),
@@ -178,6 +194,7 @@ export const GetPatientResponse = zod
     last_visit: zod.union([zod.iso.date(), zod.null()]),
     phone: zod.union([zod.string(), zod.null()]),
     postal_code: zod.union([zod.string(), zod.null()]),
+    preferred_name: zod.union([zod.string(), zod.null()]),
     state: zod.union([zod.string(), zod.null()]),
     status: zod.enum(['active', 'inactive', 'critical']),
     updated_at: zod.iso.datetime({ offset: true }),
@@ -211,6 +228,10 @@ export const replacePatientBodyPhoneOneMax = 32
 
 export const replacePatientBodyPostalCodeOneMax = 20
 
+export const replacePatientBodyPreferredNameOneMin = 2
+export const replacePatientBodyPreferredNameOneMax = 50
+
+export const replacePatientBodyPreferredNameOneRegExp = new RegExp("^[A-Za-z .'-]+$")
 export const replacePatientBodyStateOneMax = 100
 
 export const replacePatientBodyStatusDefault = `active`
@@ -244,6 +265,16 @@ export const ReplacePatientBody = zod
     postal_code: zod
       .union([zod.string().min(1).max(replacePatientBodyPostalCodeOneMax), zod.null()])
       .optional(),
+    preferred_name: zod
+      .union([
+        zod
+          .string()
+          .min(replacePatientBodyPreferredNameOneMin)
+          .max(replacePatientBodyPreferredNameOneMax)
+          .regex(replacePatientBodyPreferredNameOneRegExp),
+        zod.null(),
+      ])
+      .optional(),
     state: zod
       .union([zod.string().min(1).max(replacePatientBodyStateOneMax), zod.null()])
       .optional(),
@@ -272,6 +303,7 @@ export const ReplacePatientResponse = zod
     last_visit: zod.union([zod.iso.date(), zod.null()]),
     phone: zod.union([zod.string(), zod.null()]),
     postal_code: zod.union([zod.string(), zod.null()]),
+    preferred_name: zod.union([zod.string(), zod.null()]),
     state: zod.union([zod.string(), zod.null()]),
     status: zod.enum(['active', 'inactive', 'critical']),
     updated_at: zod.iso.datetime({ offset: true }),

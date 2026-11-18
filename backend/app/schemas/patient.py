@@ -1,5 +1,6 @@
 """Request and response shapes for the patient API."""
 
+import re
 import uuid
 from datetime import date, datetime
 from typing import Annotated
@@ -12,6 +13,7 @@ from pydantic import (
     EmailStr,
     StringConstraints,
     ValidationInfo,
+    WithJsonSchema,
     computed_field,
     field_validator,
 )
@@ -20,6 +22,9 @@ from pydantic_core import PydanticCustomError
 from app.models import BloodType, PatientStatus
 
 OLDEST_PLAUSIBLE_AGE = 130
+PREFERRED_NAME_MIN_LENGTH = 2
+PREFERRED_NAME_MAX_LENGTH = 50
+PREFERRED_NAME_PATTERN = r"^[A-Za-z .'-]+$"
 
 
 def age_on(date_of_birth: date, today: date) -> int:
@@ -68,11 +73,51 @@ PastDate = Annotated[date, AfterValidator(_not_in_future)]
 BirthDate = Annotated[PastDate, AfterValidator(_plausible_birth_date)]
 
 
+def _preferred_name(value: str) -> str:
+    if len(value) < PREFERRED_NAME_MIN_LENGTH:
+        raise PydanticCustomError(
+            "preferred_name_too_short",
+            "Must be at least {min_length} characters",
+            {"min_length": PREFERRED_NAME_MIN_LENGTH},
+        )
+    if len(value) > PREFERRED_NAME_MAX_LENGTH:
+        raise PydanticCustomError(
+            "preferred_name_too_long",
+            "Cannot be more than {max_length} characters",
+            {"max_length": PREFERRED_NAME_MAX_LENGTH},
+        )
+    if not re.fullmatch(PREFERRED_NAME_PATTERN, value):
+        raise PydanticCustomError(
+            "preferred_name_invalid_characters",
+            "Can only contain letters, spaces, hyphens, apostrophes, and periods",
+        )
+    return value
+
+
+# The checks run in `_preferred_name` so each failure has its own code and message.
+# The same rules are published in the OpenAPI schema, which the frontend's
+# generated Zod schema validates against.
+PreferredName = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True),
+    AfterValidator(_preferred_name),
+    WithJsonSchema(
+        {
+            "type": "string",
+            "minLength": PREFERRED_NAME_MIN_LENGTH,
+            "maxLength": PREFERRED_NAME_MAX_LENGTH,
+            "pattern": PREFERRED_NAME_PATTERN,
+        }
+    ),
+]
+
+
 class PatientWrite(BaseModel):
     """Body for creating a patient, or replacing one (PUT)."""
 
     first_name: _text(100)
     last_name: _text(100)
+    preferred_name: _optional(PreferredName) = None
     date_of_birth: BirthDate
     email: _optional(EmailStr) = None
     phone: _optional(_text(32)) = None
@@ -105,6 +150,7 @@ class PatientListItem(BaseModel):
     id: uuid.UUID
     first_name: str
     last_name: str
+    preferred_name: str | None
     date_of_birth: date
     status: PatientStatus
     last_visit: date | None

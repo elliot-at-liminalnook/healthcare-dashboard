@@ -40,6 +40,7 @@ export interface PatientWrite {
   last_visit?: string | null
   phone?: string | null
   postal_code?: string | null
+  preferred_name?: string | null
   state?: string | null
   status?: PatientStatus
 }

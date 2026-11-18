@@ -16,5 +16,6 @@ export interface PatientListItem {
   id: string
   last_name: string
   last_visit: string | null
+  preferred_name: string | null
   status: PatientStatus
 }

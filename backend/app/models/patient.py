@@ -46,6 +46,7 @@ class Patient(Base):
     # Personal information
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100), index=True)
+    preferred_name: Mapped[str | None] = mapped_column(String(100))
     # Age is derived from this, never stored.
     date_of_birth: Mapped[date] = mapped_column(Date)
     email: Mapped[str | None] = mapped_column(String(254))

@@ -21,6 +21,7 @@ function describe(issue: z.core.$ZodRawIssue): string | undefined {
     case 'invalid_format':
       if (issue.format === 'email') return 'Enter a valid email address, like name@example.com'
       if (issue.format === 'date') return 'Enter a valid date'
+      if (issue.format === 'regex') return 'Contains characters that are not allowed'
       return undefined
     case 'invalid_value':
       return 'Choose one of the listed options'

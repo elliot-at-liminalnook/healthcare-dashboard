@@ -119,6 +119,12 @@ export function PatientForm({ initialValues, submitLabel, cancelTo, onSubmit }: 
               {...field('first_name')}
             />
             <TextInput label="Last name" withAsterisk autoComplete="off" {...field('last_name')} />
+            <TextInput
+              label="Preferred name"
+              autoComplete="off"
+              description="2-50 characters; letters, spaces, hyphens, apostrophes, and periods"
+              {...field('preferred_name')}
+            />
             <DateInput
               label="Date of birth"
               withAsterisk
